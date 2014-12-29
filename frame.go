@@ -35,6 +35,17 @@ func Data(data *string, flag, padLen byte) []byte {
 	return frame
 }
 
+func Settings(streamID uint16, value uint32) []byte {
+	frame := make([]byte, 6)
+	for i := 0; i < 2; i++ {
+		frame[i] = byte(streamID >> (byte(1-i) * 8))
+	}
+	for i := 0; i < 4; i++ {
+		frame[i+2] = byte(value >> (byte(3-i) * 8))
+	}
+	return frame
+}
+
 func main() {
 	a := "string"
 	aa := uint32((1 << 31) - 1)
