@@ -18,10 +18,22 @@ func http2Frame(length uint32, frame, flag byte, streamID uint32) []byte {
 	return header
 }
 
-/*func Data(string data, flag bool, uint32 padLen) byte {
-
-	return
-}*/
+func Data(data *string, flag, padLen byte) []byte {
+	var frame []byte
+	idx := 0
+	if flag == FLAG_PADDED {
+		frame = make([]byte, len(*data)+int(padLen+1))
+		frame[idx] = padLen
+		idx++
+	} else {
+		frame = make([]byte, uint32(len(*data)))
+	}
+	byteData := []byte(*data)
+	for i, d := range byteData {
+		frame[idx+i] = d
+	}
+	return frame
+}
 
 func main() {
 	a := "string"
