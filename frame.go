@@ -51,7 +51,6 @@ func Headers(headers []hpack.Header, flag, padLen, weight byte, streamDependency
 	var frame []byte
 	idx := 0
 	wire, err := hex.DecodeString(hpack.Encode(headers, false, false, false, table, -1))
-	fmt.Println(wire)
 	if err != nil {
 		panic(err)
 	}
@@ -77,12 +76,26 @@ func Headers(headers []hpack.Header, flag, padLen, weight byte, streamDependency
 	return frame
 }
 
+func GoAway(streamID, errCode uint32, debug string) []byte {
+	frame := make([]byte, 8+len(debug))
+	for i := 0; i < 4; i++ {
+		frame[i] = byte(streamID >> (byte(3-i) * 8))
+		frame[i+4] = byte(errCode >> (byte(3-i) * 8))
+	}
+	for i, c := range debug {
+		frame[i+8] = byte(c)
+	}
+	return frame
+}
+
 func main() {
 	table := hpack.InitTable()
 	headers := []hpack.Header{hpack.Header{":method", "GET"}, hpack.Header{":scheme", "http"},
 		hpack.Header{":authority", "127.0.0.1"}, hpack.Header{":path", "/"}}
 	hh := Headers(headers, FLAG_PRIORITY, 0, 255, 0xef00ff00, &table)
 	fmt.Println(hh)
+	goaway := GoAway(1, 1, "This is Error")
+	fmt.Println(goaway)
 	//a := "string"
 	aa := uint32((1 << 31) - 1)
 	bi := make([]byte, 10)
