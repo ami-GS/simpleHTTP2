@@ -9,11 +9,11 @@ import (
 func http2Frame(length uint32, frame, flag byte, streamID uint32) []byte {
 	header := make([]byte, 9)
 	for i := 0; i < 3; i++ {
-		header[i] = byte(length>>byte(2-i)) & 0xff
+		header[i] = byte(length >> (byte(2-i) * 8))
 	}
 	header[3], header[4] = frame, flag
 	for i := 0; i < 4; i++ {
-		header[i+5] = byte(streamID>>byte(3-i)) & 0xff
+		header[i+5] = byte(streamID >> (byte(3-i) * 8))
 	}
 	return header
 }
