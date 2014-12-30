@@ -7,7 +7,7 @@ import (
 	hpack "github.com/ami-GS/GoHPACK"
 )
 
-func http2Frame(length uint32, frame, flag byte, streamID uint32) []byte {
+func packHttp2Frame(length uint32, frame, flag byte, streamID uint32) []byte {
 	header := make([]byte, 9)
 	for i := 0; i < 3; i++ {
 		header[i] = byte(length >> (byte(2-i) * 8))
@@ -19,7 +19,7 @@ func http2Frame(length uint32, frame, flag byte, streamID uint32) []byte {
 	return header
 }
 
-func Data(data *string, flag, padLen byte) []byte {
+func PackData(data *string, flag, padLen byte) []byte {
 	var frame []byte
 	idx := 0
 	if flag == FLAG_PADDED {
@@ -36,7 +36,7 @@ func Data(data *string, flag, padLen byte) []byte {
 	return frame
 }
 
-func Settings(streamID uint16, value uint32) []byte {
+func PackSettings(streamID uint16, value uint32) []byte {
 	frame := make([]byte, 6)
 	for i := 0; i < 2; i++ {
 		frame[i] = byte(streamID >> (byte(1-i) * 8))
@@ -47,7 +47,7 @@ func Settings(streamID uint16, value uint32) []byte {
 	return frame
 }
 
-func Headers(headers []hpack.Header, flag, padLen, weight byte, streamDependency uint32, table *hpack.Table) []byte {
+func PackHeaders(headers []hpack.Header, flag, padLen, weight byte, streamDependency uint32, table *hpack.Table) []byte {
 	var frame []byte
 	idx := 0
 	wire, err := hex.DecodeString(hpack.Encode(headers, false, false, false, table, -1))
@@ -76,7 +76,7 @@ func Headers(headers []hpack.Header, flag, padLen, weight byte, streamDependency
 	return frame
 }
 
-func GoAway(streamID, errCode uint32, debug string) []byte {
+func PackGoAway(streamID, errCode uint32, debug string) []byte {
 	frame := make([]byte, 8+len(debug))
 	for i := 0; i < 4; i++ {
 		frame[i] = byte(streamID >> (byte(3-i) * 8))
