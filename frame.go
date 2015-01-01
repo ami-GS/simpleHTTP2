@@ -1,4 +1,4 @@
-package main
+package http2
 
 import (
 	"encoding/hex"
@@ -35,6 +35,14 @@ type Data struct {
 	PadLen byte
 }
 
+func NewData(data string, streamID uint32, flag, padLen byte) []byte {
+	frame := Data{Data: data, PadLen: padLen}
+	frame.Pack(flag)
+	header := Http2Header{Length: uint32(len(frame.Wire)), Type: TYPE_DATA, Flag: flag, StreamID: streamID}
+	header.Pack()
+	return append(header.Wire, frame.Wire...)
+}
+
 func (self *Data) Pack(flag byte) {
 	idx := 0
 	if flag == FLAG_PADDED {
@@ -64,6 +72,14 @@ type Settings struct {
 	Value     uint32
 }
 
+func NewSettings(settingID uint16, value uint32, flag byte) []byte {
+	frame := Settings{SettingID: settingID, Value: value}
+	frame.Pack()
+	header := Http2Header{Length: uint32(len(frame.Wire)), Type: TYPE_SETTINGS, Flag: flag, StreamID: 0}
+	header.Pack()
+	return append(header.Wire, frame.Wire...)
+}
+
 func (self *Settings) Pack() {
 	self.Wire = make([]byte, 6)
 	for i := 0; i < 2; i++ {
@@ -86,6 +102,14 @@ type Headers struct {
 	PadLen, Weight   byte
 	E                bool
 	StreamDependency uint32
+}
+
+func NewHeaders(headers []hpack.Header, table *hpack.Table, streamID uint32, flag, padLen, weight byte, e bool, streamDependency uint32) []byte {
+	frame := Headers{Headers: headers, PadLen: padLen, Weight: weight, E: e, StreamDependency: streamDependency}
+	frame.Pack(flag, table)
+	header := Http2Header{Length: uint32(len(frame.Wire)), Type: TYPE_HEADERS, Flag: flag, StreamID: streamID}
+	header.Pack()
+	return append(header.Wire, frame.Wire...)
 }
 
 func (self *Headers) Pack(flag byte, table *hpack.Table) {
@@ -143,6 +167,15 @@ type GoAway struct {
 	LastStreamID uint32
 	ErrorCode    uint32
 	Debug        string
+}
+
+func NewGoAway(lastStreamID, errorCode uint32, debug string) []byte {
+	frame := GoAway{LastStreamID: lastStreamID, ErrorCode: errorCode, Debug: debug}
+	frame.Pack()
+	header := Http2Header{Length: uint32(len(frame.Wire)), Type: TYPE_GOAWAY, Flag: FLAG_NO, StreamID: 0}
+	header.Pack()
+	return append(header.Wire, frame.Wire...)
+
 }
 
 func (self *GoAway) Pack() {
