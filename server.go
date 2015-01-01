@@ -1,8 +1,8 @@
-package main
+package http2
 
 import (
-	"fmt"
-	hpack "github.com/ami-GS/GoHPACK"
+	//"fmt"
+	//hpack "github.com/ami-GS/GoHPACK"
 	"net"
 )
 
@@ -18,6 +18,6 @@ func StartServer() {
 			panic(err)
 		}
 		client := NewSession(conn)
-		client.Run()
+		client.RunReceiver()
 	}
 }

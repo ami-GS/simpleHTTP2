@@ -1,4 +1,4 @@
-package main
+package http2
 
 import (
 	"fmt"
@@ -51,9 +51,11 @@ func (self *Session) RunReceiver() {
 	for {
 		buf = make([]byte, 1024)
 		_, err := self.Conn.Read(buf)
-		if err != nil {
-			panic(err)
-		}
+		//if err != nil {
+		//panic(err)
+		//}
+		fmt.Println(err)
+		fmt.Println(buf)
 		self.Parse(buf)
 	}
 }
