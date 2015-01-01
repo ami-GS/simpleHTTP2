@@ -51,12 +51,11 @@ func (self *Session) RunReceiver() {
 	for {
 		buf = make([]byte, 1024)
 		_, err := self.Conn.Read(buf)
-		//if err != nil {
-		//panic(err)
-		//}
-		fmt.Println(err)
-		fmt.Println(buf)
-		self.Parse(buf)
+		if err != nil {
+			return //EOF?
+		} else {
+			self.Parse(buf)
+		}
 	}
 }
 
