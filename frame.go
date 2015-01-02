@@ -26,6 +26,8 @@ func (self *Http2Header) Pack() {
 
 func (self *Http2Header) Parse(data []byte) {
 	self.Length = uint32(data[0])<<16 | uint32(data[1])<<8 | uint32(data[2])
+	self.Type = data[3]
+	self.Flag = data[4]
 	self.StreamID = uint32(data[5])<<24 | uint32(data[6])<<16 | uint32(data[7])<<8 | uint32(data[8])
 }
 
@@ -93,7 +95,7 @@ func (self *Settings) Pack() {
 func (self *Settings) Parse(data []byte, flag byte) {
 	self.SettingID = uint16(data[0])<<8 | uint16(data[1])
 	self.Value = uint32(data[2])<<24 | uint32(data[3])<<16 | uint32(data[4])<<8 | uint32(data[5])
-	fmt.Println(flag) //temporally
+	_ = flag //temporally
 }
 
 type Headers struct {
