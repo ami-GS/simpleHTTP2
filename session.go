@@ -44,7 +44,7 @@ func (self *Session) Parse(buf []byte) {
 	} else if info.Type == TYPE_GOAWAY {
 		goaway := GoAway{}
 		goaway.Parse(buf[9:])
-		fmt.Println("goaway")
+		fmt.Printf("goaway: %s", goaway.Debug)
 	} else if info.Type == TYPE_WINDOW_UPDATE {
 		fmt.Println("window update")
 	} else if info.Type == TYPE_CONTINUATION {
