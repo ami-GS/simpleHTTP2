@@ -18,9 +18,14 @@ func (self *Session) Parse(buf []byte) {
 	if info.Type == TYPE_DATA {
 		data := Data{}
 		data.Parse(buf[9:], info.Flag, info.Length)
+		fmt.Printf("data: %s", data.Data)
 	} else if info.Type == TYPE_HEADERS {
 		headers := Headers{}
 		headers.Parse(buf[9:], info.Flag, &self.Table)
+		if info.Flag == FLAG_END_HEADERS {
+			self.Send(NewData("Hello! DATA frame", 1, FLAG_PADDED, 5))
+		}
+		fmt.Println("headers")
 	} else if info.Type == TYPE_PRIORITY {
 		fmt.Println("priority")
 	} else if info.Type == TYPE_RST_STREAM {
@@ -28,11 +33,18 @@ func (self *Session) Parse(buf []byte) {
 	} else if info.Type == TYPE_SETTINGS {
 		settings := Settings{}
 		settings.Parse(buf[9:], info.Flag)
+		if info.Flag == FLAG_NO {
+			self.Send(NewSettings(SETTINGS_NO, 0, FLAG_ACK))
+		} else if info.Flag == FLAG_ACK {
+			fmt.Println("recv ACK setting!")
+		}
+		fmt.Println("settings")
 	} else if info.Type == TYPE_PING {
 		fmt.Println("ping")
 	} else if info.Type == TYPE_GOAWAY {
 		goaway := GoAway{}
 		goaway.Parse(buf[9:])
+		fmt.Println("goaway")
 	} else if info.Type == TYPE_WINDOW_UPDATE {
 		fmt.Println("window update")
 	} else if info.Type == TYPE_CONTINUATION {
