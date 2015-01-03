@@ -10,8 +10,9 @@ func Connect(addr string) (client Session) {
 	if err != nil {
 		panic(err)
 	}
+	client = NewSession(conn)
+	client.Send(CONNECTION_PREFACE)
 	fmt.Printf("Successflly connected to %s\n", addr)
 
-	client = NewSession(conn)
 	return client
 }
