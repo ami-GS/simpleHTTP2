@@ -2,7 +2,7 @@ package main
 
 import (
 	hpack "github.com/ami-GS/GoHPACK"
-	"http2"
+	http2 "github.com/ami-GS/simpleHTTP2"
 	"time"
 )
 

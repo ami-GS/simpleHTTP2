@@ -1,7 +1,7 @@
 package main
 
 import (
-	"http2"
+	http2 "github.com/ami-GS/simpleHTTP2"
 )
 
 func main() {
