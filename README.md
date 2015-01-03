@@ -24,19 +24,31 @@ $ go run cli_Try.go
 
 ## Function detail
 
-Client											 	Server
-		------------------------------------------>
-				connection preface
-		------------------------------------------>
-				Settings frame
-		<------------------------------------------
-				Settings frame (Flag ACK)
-		------------------------------------------>
-				Headers frame (Flag END_HEADERS)
-		<------------------------------------------
-				Data frame
-		------------------------------------------>
-				GoAway frame
+Client                                                         Server
+
+      ----------------------------------------->
+
+            connection preface
+
+      ----------------------------------------->
+
+            Settings frame
+
+      <-----------------------------------------
+
+            Settings frame (Flag ACK)
+
+      ----------------------------------------->
+
+            Headers frame (Flag END_HEADERS)
+
+      <-----------------------------------------
+
+            Data frame
+
+      ----------------------------------------->
+
+            GoAway frame
 
 
 ## Reference
