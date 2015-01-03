@@ -24,7 +24,8 @@ $ go run cli_Try.go
 
 ## Function detail
 
-Client                                                         Server
+```
+Client                                         Server
 
       ----------------------------------------->
 
@@ -49,7 +50,7 @@ Client                                                         Server
       ----------------------------------------->
 
             GoAway frame
-
+```
 
 ## Reference
 * https://github.com/syucream/MinimumHTTP2
