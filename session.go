@@ -4,6 +4,7 @@ import (
 	"fmt"
 	hpack "github.com/ami-GS/GoHPACK"
 	"net"
+	"reflect"
 )
 
 type Session struct {
@@ -66,6 +67,10 @@ func (self *Session) RunReceiver() {
 		if err != nil {
 			return //EOF?
 		} else {
+			if reflect.DeepEqual(buf[:24], CONNECTION_PREFACE) {
+				fmt.Printf("New connection from %v\n", self.Conn.RemoteAddr())
+				continue
+			}
 			self.Parse(buf)
 		}
 	}
