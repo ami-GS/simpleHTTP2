@@ -3,11 +3,18 @@ package main
 import (
 	hpack "github.com/ami-GS/GoHPACK"
 	http2 "github.com/ami-GS/simpleHTTP2"
+	"os"
 	"time"
 )
 
 func main() {
-	client := http2.Connect("127.0.0.1:8080")
+	args := os.Args[1:]
+	var client http2.Session
+	if len(args) == 2 {
+		client = http2.Connect(args[0] + ":" + args[1])
+	} else {
+		client = http2.Connect("127.0.0.1:8080")
+	}
 	go client.RunReceiver()
 	client.Send(http2.NewSettings(http2.SETTINGS_NO, 0, http2.FLAG_NO))
 	time.Sleep(time.Second)
