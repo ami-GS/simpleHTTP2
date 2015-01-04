@@ -13,12 +13,12 @@ $ cd $GOPATH/src/github.com/ami-GS/simpleHTTP2/test
 
 * Server
 ```
-$ go run serv_Try.go
+$ go run serv_Try.go <server port>
 ```
 
 * Client
 ```
-$ go run cli_Try.go
+$ go run cli_Try.go <server ip> > <server port>
 ```
 
 
