@@ -5,9 +5,19 @@ Simple implementation of HTTP2 in Golang
 
 ## Usage
 
-* Install and change Directory
+### Install
 ```
+$ go get github.com/ami-GS/GoHPACK
 $ go get github.com/ami-GS/simpleHTTP2
+```
+or
+```
+$ go get github.com/mattn/gom
+$ gom install
+```
+
+### Change directory and test
+```
 $ cd $GOPATH/src/github.com/ami-GS/simpleHTTP2/test
 ```
 
@@ -18,7 +28,7 @@ $ go run serv_Try.go <server port>
 
 * Client
 ```
-$ go run cli_Try.go <server ip> > <server port>
+$ go run cli_Try.go <server ip> <server port>
 ```
 
 
