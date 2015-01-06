@@ -1,7 +1,6 @@
 package http2
 
 import (
-	"encoding/hex"
 	"fmt"
 	hpack "github.com/ami-GS/GoHPACK"
 )
@@ -116,10 +115,7 @@ func NewHeaders(headers []hpack.Header, table *hpack.Table, streamID uint32, fla
 
 func (self *Headers) Pack(flag byte, table *hpack.Table) {
 	idx := 0
-	encHeaders, err := hex.DecodeString(hpack.Encode(self.Headers, false, false, false, table, -1))
-	if err != nil {
-		panic(err)
-	}
+	encHeaders := hpack.Encode(self.Headers, false, false, false, table, -1)
 	if flag == FLAG_PADDED {
 		self.Wire = make([]byte, int(self.PadLen+1)+len(encHeaders))
 		self.Wire[idx] = self.PadLen
@@ -161,7 +157,7 @@ func (self *Headers) Parse(data []byte, flag byte, table *hpack.Table) {
 	} else {
 		panic("undefined flag")
 	}
-	self.Headers = hpack.Decode(hex.EncodeToString(data[idx:len(data)-int(self.PadLen)]), table)
+	self.Headers = hpack.Decode(data[idx:len(data)-int(self.PadLen)], table)
 }
 
 type GoAway struct {
