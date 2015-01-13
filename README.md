@@ -18,7 +18,7 @@ $ gom install
 
 ### Change directory and test
 ```
-$ cd $GOPATH/src/github.com/ami-GS/simpleHTTP2/test
+$ cd $GOPATH/src/github.com/ami-GS/simpleHTTP2/example
 ```
 
 * Server
