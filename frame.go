@@ -105,22 +105,23 @@ type Headers struct {
 	StreamDependency uint32
 }
 
-func NewHeaders(headers []hpack.Header, table *hpack.Table, streamID uint32, flag, padLen, weight byte, e bool, streamDependency uint32) []byte {
+func NewHeaders(headers []hpack.Header, table *hpack.Table, streamID uint32, flags, padLen, weight byte, e bool, streamDependency uint32) []byte {
 	frame := Headers{Headers: headers, PadLen: padLen, Weight: weight, E: e, StreamDependency: streamDependency}
-	frame.Pack(flag, table)
-	header := Http2Header{Length: uint32(len(frame.Wire)), Type: TYPE_HEADERS, Flag: flag, StreamID: streamID}
+	frame.Pack(flags, table)
+	header := Http2Header{Length: uint32(len(frame.Wire)), Type: TYPE_HEADERS, Flag: flags, StreamID: streamID}
 	header.Pack()
 	return append(header.Wire, frame.Wire...)
 }
 
-func (self *Headers) Pack(flag byte, table *hpack.Table) {
+func (self *Headers) Pack(flags byte, table *hpack.Table) {
 	idx := 0
 	encHeaders := hpack.Encode(self.Headers, false, false, false, table, -1)
-	if flag == FLAG_PADDED {
+	if flags&FLAG_PADDED == FLAG_PADDED {
 		self.Wire = make([]byte, int(self.PadLen+1)+len(encHeaders))
 		self.Wire[idx] = self.PadLen
 		idx++
-	} else if flag == FLAG_PRIORITY {
+	}
+	if flags&FLAG_PRIORITY == FLAG_PRIORITY {
 		self.Wire = make([]byte, 5+len(encHeaders))
 		for i := 0; i < 4; i++ {
 			self.Wire[i] = byte(self.StreamDependency >> byte((3-i)*8))
@@ -130,33 +131,38 @@ func (self *Headers) Pack(flag byte, table *hpack.Table) {
 		}
 		self.Wire[4] = self.Weight
 		idx = 5
-	} else if flag == FLAG_END_HEADERS || flag == FLAG_END_STREAM {
-		self.Wire = make([]byte, len(encHeaders))
-	} else {
-		panic("undefined flag")
 	}
+	if flags&FLAG_END_HEADERS == FLAG_END_HEADERS || flags&FLAG_END_STREAM == FLAG_END_STREAM {
+		self.Wire = make([]byte, len(encHeaders))
+	}
+	/*else {
+		panic("undefined flag")
+	}*/
 	for i, h := range encHeaders {
 		self.Wire[idx+i] = h
 	}
 }
 
-func (self *Headers) Parse(data []byte, flag byte, table *hpack.Table) {
+func (self *Headers) Parse(data []byte, flags byte, table *hpack.Table) {
 	idx := 0
-	if flag == FLAG_PADDED {
+	if flags&FLAG_PADDED == FLAG_PADDED {
 		self.PadLen = data[idx]
 		idx++
-	} else if flag == FLAG_PRIORITY {
+	}
+	if flags&FLAG_PRIORITY == FLAG_PRIORITY {
 		if data[0]&0x80 > 0 {
 			self.E = true
 		}
 		self.StreamDependency = uint32(data[0]&0xef)<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
 		self.Weight = data[4]
 		idx += 5
-	} else if flag == FLAG_END_HEADERS || flag == FLAG_END_STREAM {
-		fmt.Println("change stream state")
-	} else {
-		panic("undefined flag")
 	}
+	if flags&FLAG_END_HEADERS == FLAG_END_HEADERS || flags&FLAG_END_STREAM == FLAG_END_STREAM {
+		fmt.Println("change stream state")
+	}
+	/*else {
+		panic("undefined flag")
+	}*/
 	self.Headers = hpack.Decode(data[idx:len(data)-int(self.PadLen)], table)
 }
 
