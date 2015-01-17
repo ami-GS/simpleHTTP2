@@ -246,6 +246,7 @@ func (self *GoAway) GetWire() []byte {
 	return append(self.Header.HeadWire, self.Wire...)
 }
 
+/*
 func main() {
 	table := hpack.InitTable()
 	headers := []hpack.Header{hpack.Header{":method", "GET"}, hpack.Header{":scheme", "http"},
@@ -279,3 +280,4 @@ func main() {
 	fmt.Printf("goaway %v\n", goaway)
 	fmt.Printf("goaway2 %v\n", goaway2)
 }
+*/
