@@ -6,20 +6,26 @@ import (
 )
 
 type Http2Header struct {
-	Wire       []byte
 	Length     uint32
 	Type, Flag byte
 	StreamID   uint32
+	HeadWire   []byte
+}
+
+func NewHttp2Header(length uint32, fType, flag byte, streamID uint32) *Http2Header {
+	h := Http2Header{length, fType, flag, streamID, []byte{}}
+	h.Pack()
+	return &h
 }
 
 func (self *Http2Header) Pack() {
-	self.Wire = make([]byte, 9)
+	self.HeadWire = make([]byte, 9)
 	for i := 0; i < 3; i++ {
-		self.Wire[i] = byte(self.Length >> byte((2-i)*8))
+		self.HeadWire[i] = byte(self.Length >> byte((2-i)*8))
 	}
-	self.Wire[3], self.Wire[4] = self.Type, self.Flag
+	self.HeadWire[3], self.HeadWire[4] = self.Type, self.Flag
 	for i := 0; i < 4; i++ {
-		self.Wire[i+5] = byte(self.StreamID >> byte((3-i)*8))
+		self.HeadWire[i+5] = byte(self.StreamID >> byte((3-i)*8))
 	}
 }
 
