@@ -11,7 +11,7 @@ func Connect(addr string) (client Session) {
 		panic(err)
 	}
 	client = NewSession(conn)
-	client.Send(CONNECTION_PREFACE)
+	client.Conn.Write(CONNECTION_PREFACE)
 	fmt.Printf("Successflly connected to %s\n", addr)
 
 	return client
