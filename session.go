@@ -35,8 +35,7 @@ func (self *Session) Parse(buf []byte) {
 		headers.Parse(buf[9:])
 		headers.Headers = header
 		if info.Flag == FLAG_END_HEADERS {
-			frame := Frame(NewData("Hello! DATA frame", 1, FLAG_PADDED, 5))
-			self.Send(frame.GetWire())
+			self.Send(NewData("Hello! DATA frame", 1, FLAG_PADDED, 5))
 		}
 		fmt.Println("headers")
 	} else if info.Type == TYPE_PRIORITY {
@@ -47,8 +46,7 @@ func (self *Session) Parse(buf []byte) {
 		settings := Settings{Header: &info}
 		settings.Parse(buf[9:])
 		if info.Flag == FLAG_NO {
-			frame := Frame(NewSettings(SETTINGS_NO, 0, FLAG_ACK))
-			self.Send(frame.GetWire())
+			self.Send(NewSettings(SETTINGS_NO, 0, FLAG_ACK))
 		} else if info.Flag == FLAG_ACK {
 			fmt.Println("recv ACK setting!")
 		}
@@ -68,8 +66,8 @@ func (self *Session) Parse(buf []byte) {
 	}
 }
 
-func (self *Session) Send(data []byte) {
-	self.Conn.Write(data)
+func (self *Session) Send(frame Frame) {
+	self.Conn.Write(frame.GetWire())
 }
 
 func (self *Session) RunReceiver() {
