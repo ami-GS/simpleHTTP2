@@ -8,6 +8,7 @@ import (
 type Frame interface {
 	Pack()
 	Parse(data []byte)
+	String() string
 	GetWire() []byte
 }
 
@@ -85,6 +86,10 @@ func (self *Data) Parse(data []byte) {
 	}
 }
 
+func (self *Data) String() string {
+	return fmt.Sprintf("Data {contents:%s}", self.Data)
+}
+
 func (self *Data) GetWire() []byte {
 	return append(self.Header.HeadWire, self.Wire...)
 }
@@ -118,6 +123,10 @@ func (self *Settings) Parse(data []byte) {
 	self.SettingID = uint16(data[0])<<8 | uint16(data[1])
 	self.Value = uint32(data[2])<<24 | uint32(data[3])<<16 | uint32(data[4])<<8 | uint32(data[5])
 	_ = self.Header.Flag //temporally
+}
+
+func (self *Settings) String() string {
+	return fmt.Sprintf("Settings")
 }
 
 func (self *Settings) GetWire() []byte {
@@ -203,6 +212,10 @@ func (self *Headers) Parse(data []byte) {
 	}*/
 }
 
+func (self *Headers) String() string {
+	return fmt.Sprintf("Headers {Headers:%v}", self.Headers)
+}
+
 func (self *Headers) GetWire() []byte {
 	return append(self.Header.HeadWire, self.Wire...)
 }
@@ -240,6 +253,10 @@ func (self *GoAway) Parse(data []byte) {
 	if len(data) >= 9 {
 		self.Debug = string(data[8:])
 	}
+}
+
+func (self *GoAway) String() string {
+	return fmt.Sprintf("GoAway {debug:%s}", self.Debug)
 }
 
 func (self *GoAway) GetWire() []byte {
