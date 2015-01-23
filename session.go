@@ -16,12 +16,11 @@ func (self *Session) Parse(buf []byte) {
 	info := Http2Header{}
 	info.Parse(buf[:9])
 
+	var frame Frame
 	if info.Type == TYPE_DATA {
-		data := Data{Header: &info}
-		data.Parse(buf[9:])
-		fmt.Printf("data: %s", data.Data)
+		frame = &Data{Header: &info}
+		frame.Parse(buf[9:])
 	} else if info.Type == TYPE_HEADERS {
-		headers := Headers{Header: &info}
 		var idx, padLen byte = 0, 0
 		if info.Flag&FLAG_PADDED == FLAG_PADDED {
 			padLen = buf[9]
@@ -31,42 +30,35 @@ func (self *Session) Parse(buf []byte) {
 			idx += 5
 		}
 		header := hpack.Decode(buf[idx:byte(len(buf[9:]))-padLen], &self.Table)
+		frame = &Headers{Header: &info, Headers: header}
 
-		headers.Parse(buf[9:])
-		headers.Headers = header
+		frame.Parse(buf[9:])
 		if info.Flag == FLAG_END_HEADERS {
 			self.Send(NewData("Hello! DATA frame", 1, FLAG_PADDED, 5))
 		}
-		fmt.Println("headers")
 	} else if info.Type == TYPE_PRIORITY {
-		fmt.Println("priority")
 	} else if info.Type == TYPE_RST_STREAM {
-		fmt.Println("rst stream")
 	} else if info.Type == TYPE_SETTINGS {
-		settings := Settings{Header: &info}
-		settings.Parse(buf[9:])
+		frame = &Settings{Header: &info}
+		frame.Parse(buf[9:])
 		if info.Flag == FLAG_NO {
 			self.Send(NewSettings(SETTINGS_NO, 0, FLAG_ACK))
 		} else if info.Flag == FLAG_ACK {
-			fmt.Println("recv ACK setting!")
 		}
-		fmt.Println("settings")
 	} else if info.Type == TYPE_PING {
-		fmt.Println("ping")
 	} else if info.Type == TYPE_GOAWAY {
-		goaway := GoAway{Header: &info}
-		goaway.Parse(buf[9:])
-		fmt.Printf("goaway: %s", goaway.Debug)
+		frame = &GoAway{Header: &info}
+		frame.Parse(buf[9:])
 	} else if info.Type == TYPE_WINDOW_UPDATE {
-		fmt.Println("window update")
 	} else if info.Type == TYPE_CONTINUATION {
-		fmt.Println("continuation")
 	} else {
 		panic("undefined frame type")
 	}
+	fmt.Printf("Receive: %s\n", frame.String())
 }
 
 func (self *Session) Send(frame Frame) {
+	fmt.Printf("Send: %s\n", frame.String())
 	self.Conn.Write(frame.GetWire())
 }
 
