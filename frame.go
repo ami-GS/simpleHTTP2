@@ -13,13 +13,14 @@ type Frame interface {
 }
 
 type Http2Header struct {
-	Length     uint32
-	Type, Flag byte
-	StreamID   uint32
-	HeadWire   []byte
+	Length   uint32
+	Type     TYPE
+	Flag     FLAG
+	StreamID uint32
+	HeadWire []byte
 }
 
-func NewHttp2Header(length uint32, fType, flag byte, streamID uint32) *Http2Header {
+func NewHttp2Header(length uint32, fType TYPE, flag FLAG, streamID uint32) *Http2Header {
 	h := Http2Header{length, fType, flag, streamID, []byte{}}
 	h.Pack()
 	return &h
@@ -30,7 +31,7 @@ func (self *Http2Header) Pack() {
 	for i := 0; i < 3; i++ {
 		self.HeadWire[i] = byte(self.Length >> byte((2-i)*8))
 	}
-	self.HeadWire[3], self.HeadWire[4] = self.Type, self.Flag
+	self.HeadWire[3], self.HeadWire[4] = byte(self.Type), byte(self.Flag)
 	for i := 0; i < 4; i++ {
 		self.HeadWire[i+5] = byte(self.StreamID >> byte((3-i)*8))
 	}
@@ -38,8 +39,8 @@ func (self *Http2Header) Pack() {
 
 func (self *Http2Header) Parse(data []byte) {
 	self.Length = uint32(data[0])<<16 | uint32(data[1])<<8 | uint32(data[2])
-	self.Type = data[3]
-	self.Flag = data[4]
+	self.Type = TYPE(data[3])
+	self.Flag = FLAG(data[4])
 	self.StreamID = uint32(data[5])<<24 | uint32(data[6])<<16 | uint32(data[7])<<8 | uint32(data[8])
 }
 
@@ -50,13 +51,13 @@ type Data struct {
 	Wire   []byte
 }
 
-func NewData(data string, streamID uint32, flag, padLen byte) *Data {
+func NewData(data string, streamID uint32, flag FLAG, padLen byte) *Data {
 	var length uint32 = uint32(len(data))
-	if flag&FLAG_PADDED == FLAG_PADDED {
+	if flag&PADDED == PADDED {
 		length += uint32(padLen + 1)
 	}
 
-	header := NewHttp2Header(length, TYPE_DATA, flag, streamID)
+	header := NewHttp2Header(length, DATA_FRAME, flag, streamID)
 	frame := Data{header, data, padLen, []byte{}}
 	frame.Pack()
 
@@ -65,7 +66,7 @@ func NewData(data string, streamID uint32, flag, padLen byte) *Data {
 
 func (self *Data) Pack() {
 	idx := 0
-	if self.Header.Flag == FLAG_PADDED {
+	if self.Header.Flag == PADDED {
 		self.Wire = make([]byte, len(self.Data)+int(self.PadLen+1))
 		self.Wire[idx] = self.PadLen
 		idx++
@@ -78,7 +79,7 @@ func (self *Data) Pack() {
 }
 
 func (self *Data) Parse(data []byte) {
-	if self.Header.Flag == FLAG_PADDED {
+	if self.Header.Flag == PADDED {
 		self.PadLen = data[0]
 		self.Data = string(data[1 : self.Header.Length-uint32(self.PadLen)])
 	} else {
@@ -96,13 +97,13 @@ func (self *Data) GetWire() []byte {
 
 type Settings struct {
 	Header    *Http2Header
-	SettingID uint16
+	SettingID SETTING
 	Value     uint32
 	Wire      []byte
 }
 
-func NewSettings(settingID uint16, value uint32, flag byte) *Settings {
-	header := NewHttp2Header(uint32(6), TYPE_SETTINGS, flag, 0)
+func NewSettings(settingID SETTING, value uint32, flag FLAG) *Settings {
+	header := NewHttp2Header(uint32(6), SETTINGS_FRAME, flag, 0)
 	frame := Settings{header, settingID, value, []byte{}}
 	frame.Pack()
 
@@ -120,7 +121,7 @@ func (self *Settings) Pack() {
 }
 
 func (self *Settings) Parse(data []byte) {
-	self.SettingID = uint16(data[0])<<8 | uint16(data[1])
+	self.SettingID = SETTING(uint16(data[0])<<8 | uint16(data[1]))
 	self.Value = uint32(data[2])<<24 | uint32(data[3])<<16 | uint32(data[4])<<8 | uint32(data[5])
 	_ = self.Header.Flag //temporally
 }
@@ -143,17 +144,17 @@ type Headers struct {
 	Wire             []byte
 }
 
-func NewHeaders(headers []hpack.Header, table *hpack.Table, streamID uint32, flag, padLen, weight byte, e bool, streamDependency uint32) *Headers {
+func NewHeaders(headers []hpack.Header, table *hpack.Table, streamID uint32, flag FLAG, padLen, weight byte, e bool, streamDependency uint32) *Headers {
 	encHeaders := hpack.Encode(headers, false, false, false, table, -1)
 	var length uint32 = uint32(len(encHeaders))
-	if flag&FLAG_PADDED == FLAG_PADDED {
+	if flag&PADDED == PADDED {
 		length += uint32(padLen + 1)
 	}
-	if flag&FLAG_PRIORITY == FLAG_PRIORITY {
+	if flag&PRIORITY == PRIORITY {
 		length += 5
 	}
 
-	header := NewHttp2Header(length, TYPE_HEADERS, flag, streamID)
+	header := NewHttp2Header(length, HEADERS_FRAME, flag, streamID)
 
 	frame := Headers{header, headers, encHeaders, padLen, weight, e, streamDependency, []byte{}}
 	frame.Pack()
@@ -163,12 +164,12 @@ func NewHeaders(headers []hpack.Header, table *hpack.Table, streamID uint32, fla
 
 func (self *Headers) Pack() {
 	idx := 0
-	if self.Header.Flag&FLAG_PADDED == FLAG_PADDED {
+	if self.Header.Flag&PADDED == PADDED {
 		self.Wire = make([]byte, int(self.PadLen+1)+len(self.block))
 		self.Wire[idx] = self.PadLen
 		idx++
 	}
-	if self.Header.Flag&FLAG_PRIORITY == FLAG_PRIORITY {
+	if self.Header.Flag&PRIORITY == PRIORITY {
 		self.Wire = make([]byte, 5+len(self.block))
 		for i := 0; i < 4; i++ {
 			self.Wire[i] = byte(self.StreamDependency >> byte((3-i)*8))
@@ -179,7 +180,7 @@ func (self *Headers) Pack() {
 		self.Wire[4] = self.Weight
 		idx = 5
 	}
-	if self.Header.Flag&FLAG_END_HEADERS == FLAG_END_HEADERS || self.Header.Flag&FLAG_END_STREAM == FLAG_END_STREAM {
+	if self.Header.Flag&END_HEADERS == END_HEADERS || self.Header.Flag&END_STREAM == END_STREAM {
 		self.Wire = make([]byte, len(self.block))
 	}
 	/*else {
@@ -192,11 +193,11 @@ func (self *Headers) Pack() {
 
 func (self *Headers) Parse(data []byte) {
 	idx := 0
-	if self.Header.Flag&FLAG_PADDED == FLAG_PADDED {
+	if self.Header.Flag&PADDED == PADDED {
 		self.PadLen = data[idx]
 		idx++
 	}
-	if self.Header.Flag&FLAG_PRIORITY == FLAG_PRIORITY {
+	if self.Header.Flag&PRIORITY == PRIORITY {
 		if data[0]&0x80 > 0 {
 			self.E = true
 		}
@@ -204,7 +205,7 @@ func (self *Headers) Parse(data []byte) {
 		self.Weight = data[4]
 		idx += 5
 	}
-	if self.Header.Flag&FLAG_END_HEADERS == FLAG_END_HEADERS || self.Header.Flag&FLAG_END_STREAM == FLAG_END_STREAM {
+	if self.Header.Flag&END_HEADERS == END_HEADERS || self.Header.Flag&END_STREAM == END_STREAM {
 		fmt.Println("change stream state")
 	}
 	/*else {
@@ -223,14 +224,14 @@ func (self *Headers) GetWire() []byte {
 type GoAway struct {
 	Header       *Http2Header
 	LastStreamID uint32
-	ErrorCode    uint32
+	ErrorCode    ERROR
 	Debug        string
 	Wire         []byte
 }
 
-func NewGoAway(lastStreamID, errorCode uint32, debug string) *GoAway {
+func NewGoAway(lastStreamID uint32, errorCode ERROR, debug string) *GoAway {
 	var length uint32 = uint32(len(debug) + 8)
-	header := NewHttp2Header(length, TYPE_GOAWAY, FLAG_NO, 0)
+	header := NewHttp2Header(length, GOAWAY_FRAME, NO, 0)
 	frame := GoAway{header, lastStreamID, errorCode, debug, []byte{}}
 	frame.Pack()
 	return &frame
@@ -249,7 +250,7 @@ func (self *GoAway) Pack() {
 
 func (self *GoAway) Parse(data []byte) {
 	self.LastStreamID = uint32(data[0]&0xef)<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
-	self.ErrorCode = uint32(data[4])<<24 | uint32(data[5])<<16 | uint32(data[6])<<8 | uint32(data[7])
+	self.ErrorCode = ERROR(uint32(data[4])<<24 | uint32(data[5])<<16 | uint32(data[6])<<8 | uint32(data[7]))
 	if len(data) >= 9 {
 		self.Debug = string(data[8:])
 	}

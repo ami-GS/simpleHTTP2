@@ -17,40 +17,40 @@ func (self *Session) Parse(buf []byte) {
 	info.Parse(buf[:9])
 
 	var frame Frame
-	if info.Type == TYPE_DATA {
+	if info.Type == DATA_FRAME {
 		frame = &Data{Header: &info}
 		frame.Parse(buf[9:])
-	} else if info.Type == TYPE_HEADERS {
+	} else if info.Type == HEADERS_FRAME {
 		var idx, padLen byte = 0, 0
-		if info.Flag&FLAG_PADDED == FLAG_PADDED {
+		if info.Flag&PADDED == PADDED {
 			padLen = buf[9]
 			idx += 1 + padLen
 		}
-		if info.Flag&FLAG_PRIORITY == FLAG_PRIORITY {
+		if info.Flag&PRIORITY == PRIORITY {
 			idx += 5
 		}
 		header := hpack.Decode(buf[idx:byte(len(buf[9:]))-padLen], &self.Table)
 		frame = &Headers{Header: &info, Headers: header}
 
 		frame.Parse(buf[9:])
-		if info.Flag == FLAG_END_HEADERS {
-			self.Send(NewData("Hello! DATA frame", 1, FLAG_PADDED, 5))
+		if info.Flag == END_HEADERS {
+			self.Send(NewData("Hello! DATA frame", 1, PADDED, 5))
 		}
-	} else if info.Type == TYPE_PRIORITY {
-	} else if info.Type == TYPE_RST_STREAM {
-	} else if info.Type == TYPE_SETTINGS {
+	} else if info.Type == PRIORITY_FRAME {
+	} else if info.Type == RST_STREAM_FRAME {
+	} else if info.Type == SETTINGS_FRAME {
 		frame = &Settings{Header: &info}
 		frame.Parse(buf[9:])
-		if info.Flag == FLAG_NO {
-			self.Send(NewSettings(SETTINGS_NO, 0, FLAG_ACK))
-		} else if info.Flag == FLAG_ACK {
+		if info.Flag == NO {
+			self.Send(NewSettings(NO_SETTING, 0, ACK))
+		} else if info.Flag == ACK {
 		}
-	} else if info.Type == TYPE_PING {
-	} else if info.Type == TYPE_GOAWAY {
+	} else if info.Type == PING_FRAME {
+	} else if info.Type == GOAWAY_FRAME {
 		frame = &GoAway{Header: &info}
 		frame.Parse(buf[9:])
-	} else if info.Type == TYPE_WINDOW_UPDATE {
-	} else if info.Type == TYPE_CONTINUATION {
+	} else if info.Type == WINDOW_UPDATE_FRAME {
+	} else if info.Type == CONTINUATION_FRAME {
 	} else {
 		panic("undefined frame type")
 	}
