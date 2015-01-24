@@ -44,6 +44,12 @@ func (self *Http2Header) Parse(data []byte) {
 	self.StreamID = uint32(data[5])<<24 | uint32(data[6])<<16 | uint32(data[7])<<8 | uint32(data[8])
 }
 
+func (self *Http2Header) String() string {
+	str := fmt.Sprintf("http2 frame: Length=%d, Type=%s, Flag=%s, StreamID=%d",
+		self.Length, self.Type.String(), self.Flag.String(), self.StreamID)
+	return str
+}
+
 type Data struct {
 	Header *Http2Header
 	Data   string
