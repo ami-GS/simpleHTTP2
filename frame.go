@@ -45,8 +45,8 @@ func (self *Http2Header) Parse(data []byte) {
 }
 
 func (self *Http2Header) String() string {
-	str := fmt.Sprintf("http2 frame: Length=%d, Type=%s, Flag=%s, StreamID=%d",
-		self.Length, self.Type.String(), self.Flag.String(), self.StreamID)
+	str := fmt.Sprintf("%s frame: Length=%d, Flag=%s, StreamID=%d",
+		self.Type.String(), self.Length, self.Flag.String(), self.StreamID)
 	return str
 }
 
@@ -94,7 +94,7 @@ func (self *Data) Parse(data []byte) {
 }
 
 func (self *Data) String() string {
-	return fmt.Sprintf("Data {contents:%s}", self.Data)
+	return fmt.Sprintf("%s\n{contents:%s}", self.Header.String(), self.Data)
 }
 
 func (self *Data) GetWire() []byte {
@@ -133,7 +133,8 @@ func (self *Settings) Parse(data []byte) {
 }
 
 func (self *Settings) String() string {
-	return fmt.Sprintf("Settings")
+	return fmt.Sprintf("%s\nsetting=%s(%d)",
+		self.Header.String(), self.SettingID.String(), self.Value)
 }
 
 func (self *Settings) GetWire() []byte {
@@ -220,7 +221,7 @@ func (self *Headers) Parse(data []byte) {
 }
 
 func (self *Headers) String() string {
-	return fmt.Sprintf("Headers {Headers:%v}", self.Headers)
+	return fmt.Sprintf("%s\n{Headers:%v}", self.Header.String(), self.Headers)
 }
 
 func (self *Headers) GetWire() []byte {
@@ -263,7 +264,7 @@ func (self *GoAway) Parse(data []byte) {
 }
 
 func (self *GoAway) String() string {
-	return fmt.Sprintf("GoAway {debug:%s}", self.Debug)
+	return fmt.Sprintf("%s\n{debug:%s}", self.Header.String(), self.Debug)
 }
 
 func (self *GoAway) GetWire() []byte {

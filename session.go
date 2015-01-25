@@ -54,11 +54,11 @@ func (self *Session) Parse(buf []byte) {
 	} else {
 		panic("undefined frame type")
 	}
-	fmt.Printf("Receive: %s\n", frame.String())
+	fmt.Printf("Receive: \n%s\n", frame.String())
 }
 
 func (self *Session) Send(frame Frame) {
-	fmt.Printf("Send: %s\n", frame.String())
+	fmt.Printf("Send: \n%s\n", frame.String())
 	self.Conn.Write(frame.GetWire())
 }
 
