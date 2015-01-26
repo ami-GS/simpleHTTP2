@@ -29,7 +29,7 @@ func (self *Session) Parse(buf []byte) {
 		if info.Flag&PRIORITY == PRIORITY {
 			idx += 5
 		}
-		header := hpack.Decode(buf[idx:byte(len(buf[9:]))-padLen], &self.Table)
+		header := hpack.Decode(buf[9+idx:info.Length-uint32(padLen)], &self.Table)
 		frame = &Headers{Header: &info, Headers: header}
 
 		frame.Parse(buf[9:])
