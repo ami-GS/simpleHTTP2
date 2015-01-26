@@ -205,11 +205,11 @@ func (self *Headers) Parse(data []byte) {
 		idx++
 	}
 	if self.Header.Flag&PRIORITY == PRIORITY {
-		if data[0]&0x80 > 0 {
+		if data[idx]&0x80 > 0 {
 			self.E = true
 		}
-		self.StreamDependency = uint32(data[0]&0xef)<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
-		self.Weight = data[4]
+		self.StreamDependency = uint32(data[idx]&0xef)<<24 | uint32(data[idx+1])<<16 | uint32(data[idx+2])<<8 | uint32(data[idx+3])
+		self.Weight = data[idx+4]
 		idx += 5
 	}
 	if self.Header.Flag&END_HEADERS == END_HEADERS || self.Header.Flag&END_STREAM == END_STREAM {

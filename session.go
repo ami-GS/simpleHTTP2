@@ -24,7 +24,7 @@ func (self *Session) Parse(buf []byte) {
 		var idx, padLen byte = 0, 0
 		if info.Flag&PADDED == PADDED {
 			padLen = buf[9]
-			idx += 1 + padLen
+			idx += 1
 		}
 		if info.Flag&PRIORITY == PRIORITY {
 			idx += 5
