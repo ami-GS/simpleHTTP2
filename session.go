@@ -79,8 +79,8 @@ func (self *Session) RunReceiver() {
 	}
 }
 
-func NewSession(conn net.Conn) (client Session) {
-	client.Conn = conn
-	client.Table = hpack.InitTable()
+func NewSession(conn net.Conn) (session Session) {
+	session.Conn = conn
+	session.Table = hpack.InitTable()
 	return
 }
