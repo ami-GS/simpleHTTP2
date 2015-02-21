@@ -228,6 +228,36 @@ func (self *Headers) GetWire() []byte {
 	return append(self.Header.HeadWire, self.Wire...)
 }
 
+type Ping struct {
+	Header   *Http2Header
+	PingData string
+	Wire     []byte
+}
+
+func NewPing(pingData string, flag FLAG) *Ping {
+	header := NewHttp2Header(8, PING_FRAME, flag, 0)
+	frame := Ping{header, pingData, []byte{}}
+	frame.Pack()
+	return &frame
+}
+
+func (self *Ping) Pack() {
+	self.Wire = make([]byte, 8)
+	self.Wire = []byte(self.PingData)
+}
+
+func (self *Ping) Parse(data []byte) {
+	self.PingData = string(data)
+}
+
+func (self *Ping) String() string {
+	return fmt.Sprintf("%s\n{ping:%s}", self.Header.String(), self.PingData)
+}
+
+func (self *Ping) GetWire() []byte {
+	return append(self.Header.HeadWire, self.Wire...)
+}
+
 type GoAway struct {
 	Header       *Http2Header
 	LastStreamID uint32

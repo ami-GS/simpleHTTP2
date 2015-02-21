@@ -22,5 +22,7 @@ func main() {
 		hpack.Header{":authority", "127.0.0.1"}, hpack.Header{":path", "/"}}
 	client.Send(http2.NewHeaders(headers, &client.Table, 1, http2.END_HEADERS, 0, 0, false, 0))
 	time.Sleep(time.Second)
+	client.Send(http2.NewPing("aiue", http2.NO))
+	time.Sleep(time.Second)
 	client.Send(http2.NewGoAway(1, http2.NO_ERROR, "DEBUG string!!"))
 }

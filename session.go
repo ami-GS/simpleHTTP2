@@ -46,6 +46,8 @@ func (self *Session) Parse(buf []byte) {
 		} else if info.Flag == ACK {
 		}
 	} else if info.Type == PING_FRAME {
+		frame = &Ping{Header: &info}
+		frame.Parse(buf[9:])
 	} else if info.Type == GOAWAY_FRAME {
 		frame = &GoAway{Header: &info}
 		frame.Parse(buf[9:])
