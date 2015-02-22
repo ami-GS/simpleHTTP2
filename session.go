@@ -37,6 +37,8 @@ func (self *Session) Parse(buf []byte) {
 			self.Send(NewData("Hello! DATA frame", 1, PADDED, 5))
 		}
 	} else if info.Type == PRIORITY_FRAME {
+		frame = &Priority{Header: &info}
+		frame.Parse(buf[9:])
 	} else if info.Type == RST_STREAM_FRAME {
 	} else if info.Type == SETTINGS_FRAME {
 		frame = &Settings{Header: &info}

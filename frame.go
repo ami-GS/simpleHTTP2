@@ -228,6 +228,48 @@ func (self *Headers) GetWire() []byte {
 	return append(self.Header.HeadWire, self.Wire...)
 }
 
+type Priority struct {
+	Header           *Http2Header
+	E                bool
+	StreamDependency uint32
+	Weight           byte
+	Wire             []byte
+}
+
+func NewPriority(streamID uint32, e bool, streamDependency uint32, weight byte) *Priority {
+	header := NewHttp2Header(5, PRIORITY_FRAME, NO, streamID)
+	frame := Priority{header, e, streamDependency, weight, []byte{}}
+	frame.Pack()
+	return &frame
+}
+
+func (self *Priority) Pack() {
+	self.Wire = make([]byte, 5)
+	for i := 0; i < 4; i++ {
+		self.Wire[i] = byte(self.StreamDependency >> (byte(3-i) * 8))
+	}
+	if self.E {
+		self.Wire[0] |= 0x80
+	}
+	self.Wire[4] = self.Weight
+}
+
+func (self *Priority) Parse(data []byte) {
+	if data[0]&0x80 > 0 {
+		self.E = true
+	}
+	self.StreamDependency = uint32(data[0]&0xef)<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
+	self.Weight = data[4]
+}
+
+func (self *Priority) String() string {
+	return fmt.Sprintf("%s\n{Priority: E=%t, StreamDependency=%b, Weight=%d}", self.Header.String(), self.E, self.StreamDependency, self.Weight)
+}
+
+func (self *Priority) GetWire() []byte {
+	return append(self.Header.HeadWire, self.Wire...)
+}
+
 type Ping struct {
 	Header   *Http2Header
 	PingData string
