@@ -1,4 +1,4 @@
-simpleHTTP2
+cdsimpleHTTP2
 ===========
 
 Simple implementation of HTTP2 in Golang
@@ -65,3 +65,6 @@ Client                                         Server
 ## Reference
 * https://github.com/syucream/MinimumHTTP2
 * https://speakerdeck.com/syucream/2-zui-su-shi-zhuang-v3
+
+#### License
+The MIT License (MIT) Copyright (c) 2015 ami-GS
