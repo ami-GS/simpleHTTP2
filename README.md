@@ -62,6 +62,10 @@ Client                                         Server
             GoAway frame
 ```
 
+## TODO
+* Implement stream state
+* Colorize output string
+
 ## Reference
 * https://github.com/syucream/MinimumHTTP2
 * https://speakerdeck.com/syucream/2-zui-su-shi-zhuang-v3
