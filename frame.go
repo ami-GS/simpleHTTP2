@@ -343,6 +343,39 @@ func (self *GoAway) GetWire() []byte {
 	return append(self.Header.HeadWire, self.Wire...)
 }
 
+type WindowUpdate struct {
+	Header              *Http2Header
+	WindowSizeIncrement uint32
+	Wire                []byte
+}
+
+func NewWindowUpdate(streamID, windowSizeIncrement uint32) *WindowUpdate {
+	header := NewHttp2Header(4, WINDOW_UPDATE_FRAME, NO, streamID)
+	frame := WindowUpdate{header, windowSizeIncrement, []byte{}}
+	frame.Pack()
+	return &frame
+}
+
+func (self *WindowUpdate) Pack() {
+	self.Wire = make([]byte, 4)
+	self.Wire[0] = byte((self.WindowSizeIncrement >> 24) & 0xef) // top bit is reserved
+	for i := 1; i < 4; i++ {
+		self.Wire[i] = byte(self.WindowSizeIncrement >> (byte(3-i) * 8))
+	}
+}
+
+func (self *WindowUpdate) Parse(data []byte) {
+	self.WindowSizeIncrement = uint32(data[0]&0xef)<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
+}
+
+func (self *WindowUpdate) String() string {
+	return fmt.Sprintf("%s\n{WindowUpdate: WindowSizeIncrement=%d}", self.Header.String(), self.WindowSizeIncrement)
+}
+
+func (self *WindowUpdate) GetWire() []byte {
+	return append(self.Header.HeadWire, self.Wire...)
+}
+
 /*
 func main() {
 	table := hpack.InitTable()
