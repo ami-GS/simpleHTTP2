@@ -376,6 +376,35 @@ func (self *WindowUpdate) GetWire() []byte {
 	return append(self.Header.HeadWire, self.Wire...)
 }
 
+type Continuation struct {
+	Header *Http2Header
+	Block  []byte
+	Wire   []byte
+}
+
+func NewContinuation(block []byte, streamID uint32, flag FLAG) *Continuation {
+	header := NewHttp2Header(uint32(len(block)), CONTINUATION_FRAME, flag, streamID)
+	frame := Continuation{header, block, []byte{}}
+	frame.Pack()
+	return &frame
+}
+
+func (self *Continuation) Pack() {
+	self.Wire = self.Block
+}
+
+func (self *Continuation) Parse(data []byte) {
+	self.Wire = data
+}
+
+func (self *Continuation) String() string {
+	return fmt.Sprintf("%s\n{Continuation}", self.Header.String())
+}
+
+func (self *Continuation) GetWire() []byte {
+	return append(self.Header.HeadWire, self.Wire...)
+}
+
 /*
 func main() {
 	table := hpack.InitTable()
