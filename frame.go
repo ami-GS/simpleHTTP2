@@ -50,6 +50,10 @@ func (self *Http2Header) String() string {
 	return str
 }
 
+func (self *Http2Header) GetWire() []byte {
+	return self.HeadWire
+}
+
 type Data struct {
 	Header *Http2Header
 	Data   string
@@ -98,7 +102,7 @@ func (self *Data) String() string {
 }
 
 func (self *Data) GetWire() []byte {
-	return append(self.Header.HeadWire, self.Wire...)
+	return append(self.Header.GetWire(), self.Wire...)
 }
 
 type Settings struct {
@@ -138,7 +142,7 @@ func (self *Settings) String() string {
 }
 
 func (self *Settings) GetWire() []byte {
-	return append(self.Header.HeadWire, self.Wire...)
+	return append(self.Header.GetWire(), self.Wire...)
 }
 
 type Headers struct {
@@ -225,7 +229,7 @@ func (self *Headers) String() string {
 }
 
 func (self *Headers) GetWire() []byte {
-	return append(self.Header.HeadWire, self.Wire...)
+	return append(self.Header.GetWire(), self.Wire...)
 }
 
 type Priority struct {
@@ -267,7 +271,7 @@ func (self *Priority) String() string {
 }
 
 func (self *Priority) GetWire() []byte {
-	return append(self.Header.HeadWire, self.Wire...)
+	return append(self.Header.GetWire(), self.Wire...)
 }
 
 type Ping struct {
@@ -297,7 +301,7 @@ func (self *Ping) String() string {
 }
 
 func (self *Ping) GetWire() []byte {
-	return append(self.Header.HeadWire, self.Wire...)
+	return append(self.Header.GetWire(), self.Wire...)
 }
 
 type GoAway struct {
@@ -340,7 +344,7 @@ func (self *GoAway) String() string {
 }
 
 func (self *GoAway) GetWire() []byte {
-	return append(self.Header.HeadWire, self.Wire...)
+	return append(self.Header.GetWire(), self.Wire...)
 }
 
 type WindowUpdate struct {
@@ -373,7 +377,7 @@ func (self *WindowUpdate) String() string {
 }
 
 func (self *WindowUpdate) GetWire() []byte {
-	return append(self.Header.HeadWire, self.Wire...)
+	return append(self.Header.GetWire(), self.Wire...)
 }
 
 type Continuation struct {
@@ -402,7 +406,7 @@ func (self *Continuation) String() string {
 }
 
 func (self *Continuation) GetWire() []byte {
-	return append(self.Header.HeadWire, self.Wire...)
+	return append(self.Header.GetWire(), self.Wire...)
 }
 
 /*
