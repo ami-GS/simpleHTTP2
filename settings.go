@@ -56,6 +56,32 @@ func (frameType TYPE) String() string {
 	return frameNames[int(frameType)]
 }
 
+type STATE byte
+
+const (
+	IDLE = iota
+	RESERVED_LOCAL
+	RESERVED_REMOTE
+	OPEN
+	HALF_CLOSED_LOCAL
+	HALF_CLOSED_REMOTE
+	CLOSED
+)
+
+var streamState []string = []string{
+	"IDLE",
+	"RESERVED_LOCAL",
+	"RESERVED_REMOTE",
+	"OPEN",
+	"HALF_CLOSED_LOCAL",
+	"HALF_CLOSED_REMOTE",
+	"CLOSED",
+}
+
+func (state STATE) String() string {
+	return streamState[int(state)]
+}
+
 type SETTING uint16
 
 const (
