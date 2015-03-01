@@ -1,9 +1,16 @@
 package http2
 
 type Stream struct {
-	state STATE
+	ID         uint32
+	WindowSize uint16
+	State      STATE
 }
 
-func NewStream() *Stream {
-	return &Stream{IDLE}
+// 65535 should be defined in connection
+func NewStream(streamID uint32) *Stream {
+	return &Stream{streamID, 65535, IDLE}
+}
+
+func (self *Stream) ChangeState(state STATE) {
+	self.State = state
 }
