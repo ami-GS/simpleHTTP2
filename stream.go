@@ -14,3 +14,7 @@ func NewStream(streamID uint32) *Stream {
 func (self *Stream) ChangeState(state STATE) {
 	self.State = state
 }
+
+func (self *Stream) DecreaseWindow(size uint16) {
+	self.WindowSize -= size
+}
