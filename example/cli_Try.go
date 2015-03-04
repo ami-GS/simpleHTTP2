@@ -9,7 +9,7 @@ import (
 
 func main() {
 	args := os.Args[1:]
-	var client http2.Session
+	var client http2.Connection
 	if len(args) == 2 {
 		client = http2.Connect(args[0] + ":" + args[1])
 	} else {

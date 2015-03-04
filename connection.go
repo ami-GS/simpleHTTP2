@@ -7,12 +7,12 @@ import (
 	"reflect"
 )
 
-type Session struct {
+type Connection struct {
 	Conn  net.Conn
 	Table hpack.Table
 }
 
-func (self *Session) Parse(buf []byte) {
+func (self *Connection) Parse(buf []byte) {
 	info := Http2Header{}
 	info.Parse(buf[:9])
 
@@ -62,12 +62,12 @@ func (self *Session) Parse(buf []byte) {
 	fmt.Printf("Receive: \n%s\n", frame.String())
 }
 
-func (self *Session) Send(frame Frame) {
+func (self *Connection) Send(frame Frame) {
 	fmt.Printf("Send: \n%s\n", frame.String())
 	self.Conn.Write(frame.GetWire())
 }
 
-func (self *Session) RunReceiver() {
+func (self *Connection) RunReceiver() {
 	var buf []byte
 	for {
 		buf = make([]byte, 1024)
@@ -84,8 +84,8 @@ func (self *Session) RunReceiver() {
 	}
 }
 
-func NewSession(conn net.Conn) (session Session) {
-	session.Conn = conn
-	session.Table = hpack.InitTable()
+func NewConnection(conn net.Conn) (connection Connection) {
+	connection.Conn = conn
+	connection.Table = hpack.InitTable()
 	return
 }

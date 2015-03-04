@@ -5,12 +5,12 @@ import (
 	"net"
 )
 
-func Connect(addr string) (client Session) {
+func Connect(addr string) (client Connection) {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		panic(err)
 	}
-	client = NewSession(conn)
+	client = NewConnection(conn)
 	client.Conn.Write(CONNECTION_PREFACE)
 	fmt.Printf("Successflly connected to %s\n", addr)
 
