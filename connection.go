@@ -8,8 +8,9 @@ import (
 )
 
 type Connection struct {
-	Conn  net.Conn
-	Table hpack.Table
+	Conn    net.Conn
+	Streams map[uint32]*Stream
+	Table   hpack.Table
 }
 
 func (self *Connection) Parse(buf []byte) {
@@ -84,8 +85,13 @@ func (self *Connection) RunReceiver() {
 	}
 }
 
-func NewConnection(conn net.Conn) (connection Connection) {
-	connection.Conn = conn
-	connection.Table = hpack.InitTable()
-	return
+func (self *Connection) AddStream(stream *Stream) {
+	self.Streams[stream.ID] = stream
+}
+
+func NewConnection(conn net.Conn, streamID uint32) *Connection {
+	connection := Connection{conn, nil, hpack.InitTable()}
+	connection.Streams = map[uint32]*Stream{0: NewStream(&connection, 0)}
+	connection.AddStream(NewStream(&connection, streamID))
+	return &connection
 }
