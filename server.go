@@ -18,7 +18,7 @@ func StartServer(addr string) {
 		if err != nil {
 			panic(err)
 		}
-		client := NewConnection(conn)
+		client := NewConnection(conn, 2)
 		client.RunReceiver()
 	}
 }
