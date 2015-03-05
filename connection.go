@@ -85,13 +85,13 @@ func (self *Connection) RunReceiver() {
 	}
 }
 
-func (self *Connection) AddStream(stream *Stream) {
-	self.Streams[stream.ID] = stream
+func (self *Connection) AddStream(streamID uint32) {
+	self.Streams[streamID] = NewStream(self, streamID)
 }
 
 func NewConnection(conn net.Conn, streamID uint32) *Connection {
 	connection := Connection{conn, nil, hpack.InitTable()}
 	connection.Streams = map[uint32]*Stream{0: NewStream(&connection, 0)}
-	connection.AddStream(NewStream(&connection, streamID))
+	connection.AddStream(streamID)
 	return &connection
 }
