@@ -304,6 +304,38 @@ func (self *Ping) GetWire() []byte {
 	return append(self.Header.GetWire(), self.Wire...)
 }
 
+type Rst_stream struct {
+	Header    *Http2Header
+	ErrorCode ERROR
+	Wire      []byte
+}
+
+func NewRst_stream(errorCode ERROR, streamID uint32) *Rst_stream {
+	header := NewHttp2Header(4, RST_STREAM_FRAME, NO, streamID)
+	frame := Rst_stream{header, errorCode, []byte{}}
+	frame.Pack()
+	return &frame
+}
+
+func (self *Rst_stream) Pack() {
+	self.Wire = make([]byte, 4)
+	for i := 0; i < 4; i++ {
+		self.Wire[i] = byte(self.ErrorCode >> byte((3-i)*8))
+	}
+}
+
+func (self *Rst_stream) Parse(data []byte) {
+	self.ErrorCode = ERROR(uint32(data[0])<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3]))
+}
+
+func (self *Rst_stream) String() string {
+	return fmt.Sprintf("%s\n{Error:%s}", self.Header.String(), self.ErrorCode.String())
+}
+
+func (self *Rst_stream) GetWire() []byte {
+	return append(self.Header.GetWire(), self.Wire...)
+}
+
 type GoAway struct {
 	Header       *Http2Header
 	LastStreamID uint32
