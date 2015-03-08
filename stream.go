@@ -26,5 +26,7 @@ func (self *Stream) DecreaseWindow(size uint16) {
 }
 
 func (self *Stream) Send(frame Frame) {
-	self.connection.Send(frame)
+	// do something to self
+	fmt.Printf("Send: \n%s\n", frame.String())
+	(*self.Conn).Write(frame.GetWire())
 }

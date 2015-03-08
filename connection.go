@@ -71,8 +71,7 @@ func (self *Connection) Parse(buf []byte) {
 }
 
 func (self *Connection) Send(frame Frame) {
-	fmt.Printf("Send: \n%s\n", frame.String())
-	self.Conn.Write(frame.GetWire())
+	self.Streams[frame.GetStreamID()].Send(frame)
 }
 
 func (self *Connection) RunReceiver() {
