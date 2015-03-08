@@ -17,6 +17,13 @@ func (self *Connection) Parse(buf []byte) {
 	info := Http2Header{}
 	info.Parse(buf[:9])
 
+	ID := info.GetStreamID()
+	_, ok := self.Streams[ID]
+	if !ok {
+		// not cool
+		self.AddStream(ID)
+	}
+
 	var frame Frame
 	switch info.Type {
 	case DATA_FRAME:
