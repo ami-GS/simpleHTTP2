@@ -30,3 +30,7 @@ func (self *Stream) Send(frame Frame) {
 	fmt.Printf("Send: \n%s\n", frame.String())
 	(*self.Conn).Write(frame.GetWire())
 }
+
+func (self *Stream) EvaluateFrame(frame Frame) {
+	// do something to self, also error handling
+}

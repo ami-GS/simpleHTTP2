@@ -67,6 +67,8 @@ func (self *Connection) Parse(buf []byte) {
 	default:
 		panic("undefined frame type")
 	}
+
+	self.Streams[ID].EvaluateFrame(frame)
 	fmt.Printf("Receive: \n%s\n", frame.String())
 }
 
