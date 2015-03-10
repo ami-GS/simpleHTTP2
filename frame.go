@@ -11,6 +11,7 @@ type Frame interface {
 	String() string
 	GetWire() []byte
 	GetStreamID() uint32
+	Evaluate(Stream)
 }
 
 type Http2Header struct {
@@ -114,6 +115,36 @@ func (self *Data) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
+func (self *Data) Evaluate(stream Stream) {
+	if self.GetStreamID() == 0 {
+		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+	}
+
+	state := stream.GetState()
+	if state == CLOSED {
+		stream.Send(NewRst_stream(PROTOCOL_ERROR, stream.ID))
+	}
+	if state != OPEN && state != HALF_CLOSED_LOCAL {
+		stream.Send(NewRst_stream(STREAM_CLOSED, stream.ID))
+	}
+
+	/*
+		if padLen > (len) {
+			stream.Send(NewGoAway(straem.lastID, PROTOCOL_ERROR, ""))
+		}
+	*/
+
+	if self.Header.Flag&END_STREAM == END_STREAM {
+		if state == OPEN {
+			stream.ChangeState(HALF_CLOSED_REMOTE)
+		} else if state == HALF_CLOSED_LOCAL {
+			stream.ChangeState(CLOSED)
+		}
+	}
+
+	//TODO: decrease window based on the data
+}
+
 type Settings struct {
 	Header    *Http2Header
 	SettingID SETTING
@@ -157,6 +188,8 @@ func (self *Settings) GetWire() []byte {
 func (self *Settings) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
+
+func (self *Settings) Evaluate(stream Stream) {}
 
 type Headers struct {
 	Header           *Http2Header
@@ -249,6 +282,8 @@ func (self *Headers) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
+func (self *Headers) Evaluate(stream Stream) {}
+
 type Priority struct {
 	Header           *Http2Header
 	E                bool
@@ -295,6 +330,8 @@ func (self *Priority) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
+func (self *Priority) Evaluate(stream Stream) {}
+
 type Ping struct {
 	Header   *Http2Header
 	PingData string
@@ -328,6 +365,8 @@ func (self *Ping) GetWire() []byte {
 func (self *Ping) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
+
+func (self *Ping) Evaluate(stream Stream) {}
 
 type Rst_stream struct {
 	Header    *Http2Header
@@ -364,6 +403,8 @@ func (self *Rst_stream) GetWire() []byte {
 func (self *Rst_stream) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
+
+func (self *Rst_stream) Evaluate(stream Stream) {}
 
 type GoAway struct {
 	Header       *Http2Header
@@ -412,6 +453,8 @@ func (self *GoAway) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
+func (self *GoAway) Evaluate(stream Stream) {}
+
 type WindowUpdate struct {
 	Header              *Http2Header
 	WindowSizeIncrement uint32
@@ -449,6 +492,8 @@ func (self *WindowUpdate) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
+func (self *WindowUpdate) Evaluate(stream Stream) {}
+
 type Continuation struct {
 	Header *Http2Header
 	Block  []byte
@@ -481,6 +526,8 @@ func (self *Continuation) GetWire() []byte {
 func (self *Continuation) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
+
+func (self *Continuation) Evaluate(stream Stream) {}
 
 /*
 func main() {
