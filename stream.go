@@ -21,6 +21,10 @@ func (self *Stream) ChangeState(state STATE) {
 	self.State = state
 }
 
+func (self *Stream) GetState() STATE {
+	return self.State
+}
+
 func (self *Stream) DecreaseWindow(size uint16) {
 	self.WindowSize -= size
 }
