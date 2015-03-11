@@ -189,7 +189,55 @@ func (self *Settings) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
-func (self *Settings) Evaluate(stream Stream) {}
+func (self *Settings) Evaluate(stream Stream) {
+	if stream.ID != 0 {
+		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+	}
+	if self.Header.Length%6 != 0 {
+		//stream.Send(NewGoAway(stream.lastID, FRAME_SIZE_ERROR, ""))
+	}
+	if self.Header.Flag == ACK {
+		if self.Header.Length != 0 {
+			//stream.Send(NewGoAway(stream.lastID, FRAME_SIZE_ERROR, ""))
+		}
+	} else if self.Header.Length > 0 {
+		if self.SettingID == HEADER_TABLE_SIZE {
+			// setTableSize
+		} else if self.SettingID == ENABLE_PUSH {
+			if self.Value == 1 || self.Value == 0 {
+				// setPush
+			} else {
+				//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+			}
+		} else if self.SettingID == MAX_CONCURRENT_STREAMS {
+			if self.Value <= 100 {
+				fmt.Println("Warnnig: max_concurrent_stream below 100 is not recomended")
+			}
+			// setMaxConcurrentStream
+		} else if self.SettingID == INITIAL_WINDOW_SIZE {
+			/*
+				if self.Value > MAX_WINDOW_SIZE {
+					stream.Send(NewGoAway(stream.lastID, FLOW_CONTROL_ERROR, ""))
+				} else {
+					// setInitialWindowSize
+				}
+			*/
+		} else if self.SettingID == MAX_FRAME_SIZE {
+			/*
+				if INITIAL_MAX_FRAME_SIZE <= self.Value && self.Value <= LIMIT_MAX_FRAME_SIZE {
+					// setMaxFrameSize
+				} else {
+					//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+				}
+			*/
+		} else if self.SettingID == MAX_HEADER_LIST_SIZE {
+			//setMaxHeaderListize
+		} else {
+			// ignore
+		}
+		stream.Send(NewSettings(NO_SETTING, 0, ACK))
+	}
+}
 
 type Headers struct {
 	Header           *Http2Header
