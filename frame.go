@@ -310,9 +310,6 @@ func (self *Headers) Parse(data []byte) {
 		self.Weight = data[idx+4]
 		idx += 5
 	}
-	if self.Header.Flag&END_HEADERS == END_HEADERS || self.Header.Flag&END_STREAM == END_STREAM {
-		fmt.Println("change stream state")
-	}
 	/*else {
 		panic("undefined flag")
 	}*/
@@ -330,7 +327,27 @@ func (self *Headers) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
-func (self *Headers) Evaluate(stream Stream) {}
+func (self *Headers) Evaluate(stream Stream) {
+	if stream.GetState() == RESERVED_LOCAL {
+		stream.ChangeState(HALF_CLOSED_LOCAL)
+	} else {
+		stream.ChangeState(OPEN)
+	}
+
+	if stream.ID == 0 {
+		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+	}
+
+	if self.Header.Flag&END_HEADERS == END_HEADERS {
+		self.Headers = hpack.Decode(self.block, (*stream.Conn).Table)
+		// The stream.ID is suspicious
+		stream.Send(NewData("data:hoge", stream.ID, END_STREAM, 0))
+		//stream.ChangeState(?)
+	}
+	if self.Header.Flag&END_STREAM == END_STREAM {
+		stream.ChangeState(HALF_CLOSED_REMOTE)
+	}
+}
 
 type Priority struct {
 	Header           *Http2Header
