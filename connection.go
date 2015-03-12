@@ -94,7 +94,7 @@ func (self *Connection) RunReceiver() {
 }
 
 func (self *Connection) AddStream(streamID uint32) {
-	self.Streams[streamID] = NewStream(&self.Conn, streamID)
+	self.Streams[streamID] = NewStream(self, streamID)
 }
 
 func NewConnection(conn net.Conn, streamID uint32) *Connection {
