@@ -591,7 +591,20 @@ func (self *WindowUpdate) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
-func (self *WindowUpdate) Evaluate(stream Stream) {}
+func (self *WindowUpdate) Evaluate(stream Stream) {
+	if self.Header.Length != 4 {
+		//stream.Send(NewGoAway(stream.lastID, FRAME_SIZE_ERROR, ""))
+	}
+	if self.WindowSizeIncrement <= 0 {
+		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+	} else if self.WindowSizeIncrement > (1<<31)-1 {
+		if stream.ID == 0 {
+			//stream.Send(NewGoAway(stream.lastID, FLOW_CONTROL_ERROR, ""))
+		} else {
+			stream.Send(NewRst_stream(FLOW_CONTROL_ERROR, stream.ID)) //suspicious
+		}
+	}
+}
 
 type Continuation struct {
 	Header *Http2Header
