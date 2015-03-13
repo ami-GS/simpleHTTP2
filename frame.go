@@ -639,7 +639,14 @@ func (self *Continuation) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
-func (self *Continuation) Evaluate(stream Stream) {}
+func (self *Continuation) Evaluate(stream Stream) {
+	if stream.ID == 0 {
+		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+	}
+	if self.Header.Flag == END_HEADERS {
+		// ?
+	}
+}
 
 /*
 func main() {
