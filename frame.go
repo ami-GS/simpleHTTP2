@@ -395,7 +395,14 @@ func (self *Priority) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
-func (self *Priority) Evaluate(stream Stream) {}
+func (self *Priority) Evaluate(stream Stream) {
+	if stream.ID == 0 {
+		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+	}
+	if self.Header.Length != 5 {
+		//stream.Send(NewGoAway(stream.lastID, FRAME_SIZE_ERROR, ""))
+	}
+}
 
 type Ping struct {
 	Header   *Http2Header
