@@ -548,7 +548,11 @@ func (self *GoAway) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
-func (self *GoAway) Evaluate(stream Stream) {}
+func (self *GoAway) Evaluate(stream Stream) {
+	if stream.ID != 0 {
+		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+	}
+}
 
 type WindowUpdate struct {
 	Header              *Http2Header
