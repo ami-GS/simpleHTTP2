@@ -438,7 +438,19 @@ func (self *Ping) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
-func (self *Ping) Evaluate(stream Stream) {}
+func (self *Ping) Evaluate(stream Stream) {
+	if stream.ID != 0 {
+		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+	}
+	if self.Header.Length != 8 {
+		//stream.Send(NewGoAway(stream.lastID, FRAME_SIZE_ERROR, ""))
+	}
+	if self.Header.Flag != ACK {
+		stream.Send(NewPing("", ACK))
+	} else {
+		fmt.Printf("%s", self.String())
+	}
+}
 
 type Rst_stream struct {
 	Header    *Http2Header
