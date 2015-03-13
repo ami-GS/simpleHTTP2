@@ -488,7 +488,18 @@ func (self *Rst_stream) GetStreamID() uint32 {
 	return self.Header.GetStreamID()
 }
 
-func (self *Rst_stream) Evaluate(stream Stream) {}
+func (self *Rst_stream) Evaluate(stream Stream) {
+	if stream.ID == 0 || stream.GetState() == IDLE {
+		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+		return
+	}
+	if self.Header.Length != 4 {
+		//stream.Send(NewGoAway(stream.lastID, FRAME_SIZE_ERROR, ""))
+		return
+	}
+
+	stream.ChangeState(CLOSED)
+}
 
 type GoAway struct {
 	Header       *Http2Header
