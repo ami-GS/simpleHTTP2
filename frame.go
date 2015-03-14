@@ -301,6 +301,8 @@ func (self *Headers) Parse(data []byte) {
 	if self.Header.Flag&PADDED == PADDED {
 		self.PadLen = data[idx]
 		idx++
+	} else {
+		self.PadLen = 0
 	}
 	if self.Header.Flag&PRIORITY == PRIORITY {
 		if data[idx]&0x80 > 0 {
@@ -310,6 +312,7 @@ func (self *Headers) Parse(data []byte) {
 		self.Weight = data[idx+4]
 		idx += 5
 	}
+	self.block = data[idx : self.Header.Length-uint32(self.PadLen)]
 	/*else {
 		panic("undefined flag")
 	}*/
