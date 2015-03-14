@@ -30,21 +30,8 @@ func (self *Connection) Parse(buf []byte) {
 		frame = &Data{Header: &info}
 		frame.Parse(buf[9:])
 	case HEADERS_FRAME:
-		var idx, padLen byte = 0, 0
-		if info.Flag&PADDED == PADDED {
-			padLen = buf[9]
-			idx += 1
-		}
-		if info.Flag&PRIORITY == PRIORITY {
-			idx += 5
-		}
-		header := hpack.Decode(buf[9+idx:info.Length-uint32(padLen)], self.Table)
-		frame = &Headers{Header: &info, Headers: header}
-
+		frame = &Headers{Header: &info}
 		frame.Parse(buf[9:])
-		if info.Flag == END_HEADERS {
-			self.Send(NewData("Hello! DATA frame", 1, PADDED, 5))
-		}
 	case PRIORITY_FRAME:
 		frame = &Priority{Header: &info}
 		frame.Parse(buf[9:])
@@ -52,10 +39,6 @@ func (self *Connection) Parse(buf []byte) {
 	case SETTINGS_FRAME:
 		frame = &Settings{Header: &info}
 		frame.Parse(buf[9:])
-		if info.Flag == NO {
-			self.Send(NewSettings(NO_SETTING, 0, ACK))
-		} else if info.Flag == ACK {
-		}
 	case PING_FRAME:
 		frame = &Ping{Header: &info}
 		frame.Parse(buf[9:])
