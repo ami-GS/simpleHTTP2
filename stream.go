@@ -35,5 +35,6 @@ func (self *Stream) Send(frame Frame) {
 }
 
 func (self *Stream) EvaluateFrame(frame Frame) {
+	frame.Evaluate(*self)
 	// do something to self, also error handling
 }
