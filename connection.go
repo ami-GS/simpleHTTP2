@@ -28,31 +28,29 @@ func (self *Connection) Parse(buf []byte) {
 	switch info.Type {
 	case DATA_FRAME:
 		frame = &Data{Header: &info}
-		frame.Parse(buf[9:])
 	case HEADERS_FRAME:
 		frame = &Headers{Header: &info}
-		frame.Parse(buf[9:])
 	case PRIORITY_FRAME:
 		frame = &Priority{Header: &info}
-		frame.Parse(buf[9:])
 	case RST_STREAM_FRAME:
+		frame = &Rst_stream{Header: &info}
 	case SETTINGS_FRAME:
 		frame = &Settings{Header: &info}
-		frame.Parse(buf[9:])
 	case PING_FRAME:
 		frame = &Ping{Header: &info}
-		frame.Parse(buf[9:])
 	case GOAWAY_FRAME:
 		frame = &GoAway{Header: &info}
-		frame.Parse(buf[9:])
 	case WINDOW_UPDATE_FRAME:
+		frame = &WindowUpdate{Header: &info}
 	case CONTINUATION_FRAME:
+		frame = &Continuation{Header: &info}
 	default:
 		panic("undefined frame type")
 	}
+	frame.Parse(buf[9:])
 
-	self.Streams[ID].EvaluateFrame(frame)
 	fmt.Printf("Receive: \n%s\n", frame.String())
+	self.Streams[ID].EvaluateFrame(frame)
 }
 
 func (self *Connection) Send(frame Frame) {
