@@ -242,7 +242,7 @@ func (self *Settings) Evaluate(stream Stream) {
 type Headers struct {
 	Header           *Http2Header
 	Headers          []hpack.Header
-	block            []byte
+	Block            []byte
 	PadLen, Weight   byte
 	E                bool
 	StreamDependency uint32
@@ -270,12 +270,12 @@ func NewHeaders(headers []hpack.Header, table *hpack.Table, streamID uint32, fla
 func (self *Headers) Pack() {
 	idx := 0
 	if self.Header.Flag&PADDED == PADDED {
-		self.Wire = make([]byte, int(self.PadLen+1)+len(self.block))
+		self.Wire = make([]byte, int(self.PadLen+1)+len(self.Block))
 		self.Wire[idx] = self.PadLen
 		idx++
 	}
 	if self.Header.Flag&PRIORITY == PRIORITY {
-		self.Wire = make([]byte, 5+len(self.block))
+		self.Wire = make([]byte, 5+len(self.Block))
 		for i := 0; i < 4; i++ {
 			self.Wire[i] = byte(self.StreamDependency >> byte((3-i)*8))
 		}
@@ -286,12 +286,12 @@ func (self *Headers) Pack() {
 		idx = 5
 	}
 	if self.Header.Flag&END_HEADERS == END_HEADERS || self.Header.Flag&END_STREAM == END_STREAM {
-		self.Wire = make([]byte, len(self.block))
+		self.Wire = make([]byte, len(self.Block))
 	}
 	/*else {
 		panic("undefined flag")
 	}*/
-	for i, h := range self.block {
+	for i, h := range self.Block {
 		self.Wire[idx+i] = h
 	}
 }
@@ -312,7 +312,7 @@ func (self *Headers) Parse(data []byte) {
 		self.Weight = data[idx+4]
 		idx += 5
 	}
-	self.block = data[idx : self.Header.Length-uint32(self.PadLen)]
+	self.Block = data[idx : self.Header.Length-uint32(self.PadLen)]
 	/*else {
 		panic("undefined flag")
 	}*/
@@ -342,7 +342,7 @@ func (self *Headers) Evaluate(stream Stream) {
 	}
 
 	if self.Header.Flag&END_HEADERS == END_HEADERS {
-		self.Headers = hpack.Decode(self.block, (*stream.Conn).Table)
+		self.Headers = hpack.Decode(self.Block, (*stream.Conn).Table)
 		// The stream.ID is suspicious
 		stream.Send(NewData("data:hoge", stream.ID, END_STREAM, 0))
 		//stream.ChangeState(?)
