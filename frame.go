@@ -117,7 +117,7 @@ func (self *Data) GetStreamID() uint32 {
 
 func (self *Data) Evaluate(stream Stream) {
 	if self.GetStreamID() == 0 {
-		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 	}
 
 	state := stream.GetState()
@@ -127,13 +127,11 @@ func (self *Data) Evaluate(stream Stream) {
 	if state != OPEN && state != HALF_CLOSED_LOCAL {
 		stream.Send(NewRst_stream(STREAM_CLOSED, stream.ID))
 	}
-
 	/*
-		if padLen > (len) {
-			stream.Send(NewGoAway(straem.lastID, PROTOCOL_ERROR, ""))
+		if self.PadLen > (len) {
+			stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 		}
 	*/
-
 	if self.Header.Flag&END_STREAM == END_STREAM {
 		if state == OPEN {
 			stream.ChangeState(HALF_CLOSED_REMOTE)
@@ -191,14 +189,14 @@ func (self *Settings) GetStreamID() uint32 {
 
 func (self *Settings) Evaluate(stream Stream) {
 	if stream.ID != 0 {
-		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 	}
 	if self.Header.Length%6 != 0 {
-		//stream.Send(NewGoAway(stream.lastID, FRAME_SIZE_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, FRAME_SIZE_ERROR, ""))
 	}
 	if self.Header.Flag == ACK {
 		if self.Header.Length != 0 {
-			//stream.Send(NewGoAway(stream.lastID, FRAME_SIZE_ERROR, ""))
+			stream.Send(NewGoAway((*stream.Conn).lastStreamID, FRAME_SIZE_ERROR, ""))
 		}
 	} else if self.Header.Length > 0 {
 		if self.SettingID == HEADER_TABLE_SIZE {
@@ -207,7 +205,7 @@ func (self *Settings) Evaluate(stream Stream) {
 			if self.Value == 1 || self.Value == 0 {
 				// setPush
 			} else {
-				//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+				stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 			}
 		} else if self.SettingID == MAX_CONCURRENT_STREAMS {
 			if self.Value <= 100 {
@@ -215,21 +213,19 @@ func (self *Settings) Evaluate(stream Stream) {
 			}
 			// setMaxConcurrentStream
 		} else if self.SettingID == INITIAL_WINDOW_SIZE {
-			/*
-				if self.Value > MAX_WINDOW_SIZE {
-					stream.Send(NewGoAway(stream.lastID, FLOW_CONTROL_ERROR, ""))
-				} else {
-					// setInitialWindowSize
-				}
-			*/
+
+			if self.Value > MAX_WINDOW_SIZE {
+				stream.Send(NewGoAway((*stream.Conn).lastStreamID, FLOW_CONTROL_ERROR, ""))
+			} else {
+				// setInitialWindowSize
+			}
+
 		} else if self.SettingID == MAX_FRAME_SIZE {
-			/*
-				if INITIAL_MAX_FRAME_SIZE <= self.Value && self.Value <= LIMIT_MAX_FRAME_SIZE {
-					// setMaxFrameSize
-				} else {
-					//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
-				}
-			*/
+			if INITIAL_MAX_FRAME_SIZE <= self.Value && self.Value <= LIMIT_MAX_FRAME_SIZE {
+				// setMaxFrameSize
+			} else {
+				stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
+			}
 		} else if self.SettingID == MAX_HEADER_LIST_SIZE {
 			//setMaxHeaderListize
 		} else {
@@ -338,7 +334,7 @@ func (self *Headers) Evaluate(stream Stream) {
 	}
 
 	if stream.ID == 0 {
-		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 	}
 
 	if self.Header.Flag&END_HEADERS == END_HEADERS {
@@ -400,10 +396,10 @@ func (self *Priority) GetStreamID() uint32 {
 
 func (self *Priority) Evaluate(stream Stream) {
 	if stream.ID == 0 {
-		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 	}
 	if self.Header.Length != 5 {
-		//stream.Send(NewGoAway(stream.lastID, FRAME_SIZE_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, FRAME_SIZE_ERROR, ""))
 	}
 }
 
@@ -443,10 +439,10 @@ func (self *Ping) GetStreamID() uint32 {
 
 func (self *Ping) Evaluate(stream Stream) {
 	if stream.ID != 0 {
-		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 	}
 	if self.Header.Length != 8 {
-		//stream.Send(NewGoAway(stream.lastID, FRAME_SIZE_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, FRAME_SIZE_ERROR, ""))
 	}
 	if self.Header.Flag != ACK {
 		stream.Send(NewPing("", ACK))
@@ -493,11 +489,11 @@ func (self *Rst_stream) GetStreamID() uint32 {
 
 func (self *Rst_stream) Evaluate(stream Stream) {
 	if stream.ID == 0 || stream.GetState() == IDLE {
-		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 		return
 	}
 	if self.Header.Length != 4 {
-		//stream.Send(NewGoAway(stream.lastID, FRAME_SIZE_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, FRAME_SIZE_ERROR, ""))
 		return
 	}
 
@@ -553,7 +549,7 @@ func (self *GoAway) GetStreamID() uint32 {
 
 func (self *GoAway) Evaluate(stream Stream) {
 	if stream.ID != 0 {
-		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 	}
 }
 
@@ -596,13 +592,13 @@ func (self *WindowUpdate) GetStreamID() uint32 {
 
 func (self *WindowUpdate) Evaluate(stream Stream) {
 	if self.Header.Length != 4 {
-		//stream.Send(NewGoAway(stream.lastID, FRAME_SIZE_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, FRAME_SIZE_ERROR, ""))
 	}
 	if self.WindowSizeIncrement <= 0 {
-		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 	} else if self.WindowSizeIncrement > (1<<31)-1 {
 		if stream.ID == 0 {
-			//stream.Send(NewGoAway(stream.lastID, FLOW_CONTROL_ERROR, ""))
+			stream.Send(NewGoAway((*stream.Conn).lastStreamID, FLOW_CONTROL_ERROR, ""))
 		} else {
 			stream.Send(NewRst_stream(FLOW_CONTROL_ERROR, stream.ID)) //suspicious
 		}
@@ -644,7 +640,7 @@ func (self *Continuation) GetStreamID() uint32 {
 
 func (self *Continuation) Evaluate(stream Stream) {
 	if stream.ID == 0 {
-		//stream.Send(NewGoAway(stream.lastID, PROTOCOL_ERROR, ""))
+		stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 	}
 	if self.Header.Flag == END_HEADERS {
 		// ?
