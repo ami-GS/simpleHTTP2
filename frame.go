@@ -200,10 +200,11 @@ func (self *Settings) Evaluate(stream Stream) {
 		}
 	} else if self.Header.Length > 0 {
 		if self.SettingID == HEADER_TABLE_SIZE {
-			// setTableSize
+			// setter should be used
+			(*stream.Conn).HeaderTableSize = self.Value
 		} else if self.SettingID == ENABLE_PUSH {
 			if self.Value == 1 || self.Value == 0 {
-				// setPush
+				(*stream.Conn).EnablePush = byte(self.Value)
 			} else {
 				stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 			}
@@ -211,23 +212,21 @@ func (self *Settings) Evaluate(stream Stream) {
 			if self.Value <= 100 {
 				fmt.Println("Warnnig: max_concurrent_stream below 100 is not recomended")
 			}
-			// setMaxConcurrentStream
+			(*stream.Conn).MaxConcurrentStreams = self.Value
 		} else if self.SettingID == INITIAL_WINDOW_SIZE {
-
-			if self.Value > MAX_WINDOW_SIZE {
+			if self.Value > INITIAL_WINDOW_SIZE_MAX {
 				stream.Send(NewGoAway((*stream.Conn).lastStreamID, FLOW_CONTROL_ERROR, ""))
 			} else {
-				// setInitialWindowSize
+				(*stream.Conn).InitialWindowSize = self.Value
 			}
-
 		} else if self.SettingID == MAX_FRAME_SIZE {
-			if INITIAL_MAX_FRAME_SIZE <= self.Value && self.Value <= LIMIT_MAX_FRAME_SIZE {
-				// setMaxFrameSize
+			if MAX_FRAME_SIZE_MIN <= self.Value && self.Value <= MAX_FRAME_SIZE_MAX {
+				(*stream.Conn).MaxFrameSize = self.Value
 			} else {
 				stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 			}
 		} else if self.SettingID == MAX_HEADER_LIST_SIZE {
-			//setMaxHeaderListize
+			(*stream.Conn).MaxHeaderListSize = self.Value
 		} else {
 			// ignore
 		}
