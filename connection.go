@@ -85,6 +85,11 @@ func (self *Connection) AddStream(streamID uint32) {
 	self.Streams[streamID] = NewStream(self, streamID)
 }
 
+func (self *Connection) SetHeaderTableSize(value uint32) {
+	self.HeaderTableSize = value
+	self.Table.SetDynamicTableSize(value)
+}
+
 func NewConnection(conn net.Conn, streamID uint32) *Connection {
 	table := hpack.InitTable()
 	connection := Connection{conn, nil, 0, &table, 4096, 1, INFINITE, 65535, MAX_FRAME_SIZE_MIN, INFINITE}

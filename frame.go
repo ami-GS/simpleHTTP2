@@ -201,7 +201,7 @@ func (self *Settings) Evaluate(stream Stream) {
 	} else if self.Header.Length > 0 {
 		if self.SettingID == HEADER_TABLE_SIZE {
 			// setter should be used
-			(*stream.Conn).HeaderTableSize = self.Value
+			(*stream.Conn).SetHeaderTableSize(self.Value)
 		} else if self.SettingID == ENABLE_PUSH {
 			if self.Value == 1 || self.Value == 0 {
 				(*stream.Conn).EnablePush = byte(self.Value)
