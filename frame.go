@@ -17,7 +17,7 @@ type Frame interface {
 type Http2Header struct {
 	Length   uint32
 	Type     TYPE
-	Flag     FLAG
+	Flags    FLAG
 	StreamID uint32
 	HeadWire []byte
 }
@@ -33,7 +33,7 @@ func (self *Http2Header) Pack() {
 	for i := 0; i < 3; i++ {
 		self.HeadWire[i] = byte(self.Length >> byte((2-i)*8))
 	}
-	self.HeadWire[3], self.HeadWire[4] = byte(self.Type), byte(self.Flag)
+	self.HeadWire[3], self.HeadWire[4] = byte(self.Type), byte(self.Flags)
 	for i := 0; i < 4; i++ {
 		self.HeadWire[i+5] = byte(self.StreamID >> byte((3-i)*8))
 	}
@@ -42,13 +42,13 @@ func (self *Http2Header) Pack() {
 func (self *Http2Header) Parse(data []byte) {
 	self.Length = uint32(data[0])<<16 | uint32(data[1])<<8 | uint32(data[2])
 	self.Type = TYPE(data[3])
-	self.Flag = FLAG(data[4])
+	self.Flags = FLAG(data[4])
 	self.StreamID = uint32(data[5])<<24 | uint32(data[6])<<16 | uint32(data[7])<<8 | uint32(data[8])
 }
 
 func (self *Http2Header) String() string {
-	str := fmt.Sprintf("%s frame: Length=%d, Flag=%s, StreamID=%d",
-		self.Type.String(), self.Length, self.Flag.String(), self.StreamID)
+	str := fmt.Sprintf("%s frame: Length=%d, Flags=%s, StreamID=%d",
+		self.Type.String(), self.Length, self.Flags.String(), self.StreamID)
 	return str
 }
 
@@ -82,7 +82,7 @@ func NewData(data string, streamID uint32, flag FLAG, padLen byte) *Data {
 
 func (self *Data) Pack() {
 	idx := 0
-	if self.Header.Flag == PADDED {
+	if self.Header.Flags == PADDED {
 		self.Wire = make([]byte, len(self.Data)+int(self.PadLen+1))
 		self.Wire[idx] = self.PadLen
 		idx++
@@ -95,7 +95,7 @@ func (self *Data) Pack() {
 }
 
 func (self *Data) Parse(data []byte) {
-	if self.Header.Flag == PADDED {
+	if self.Header.Flags == PADDED {
 		self.PadLen = data[0]
 		self.Data = string(data[1 : self.Header.Length-uint32(self.PadLen)])
 	} else {
@@ -132,7 +132,7 @@ func (self *Data) Evaluate(stream Stream) {
 			stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 		}
 	*/
-	if self.Header.Flag&END_STREAM == END_STREAM {
+	if self.Header.Flags&END_STREAM == END_STREAM {
 		if state == OPEN {
 			stream.ChangeState(HALF_CLOSED_REMOTE)
 		} else if state == HALF_CLOSED_LOCAL {
@@ -171,7 +171,7 @@ func (self *Settings) Pack() {
 func (self *Settings) Parse(data []byte) {
 	self.SettingID = SETTING(uint16(data[0])<<8 | uint16(data[1]))
 	self.Value = uint32(data[2])<<24 | uint32(data[3])<<16 | uint32(data[4])<<8 | uint32(data[5])
-	_ = self.Header.Flag //temporally
+	_ = self.Header.Flags //temporally
 }
 
 func (self *Settings) String() string {
@@ -194,7 +194,7 @@ func (self *Settings) Evaluate(stream Stream) {
 	if self.Header.Length%6 != 0 {
 		stream.Send(NewGoAway((*stream.Conn).lastStreamID, FRAME_SIZE_ERROR, ""))
 	}
-	if self.Header.Flag == ACK {
+	if self.Header.Flags == ACK {
 		if self.Header.Length != 0 {
 			stream.Send(NewGoAway((*stream.Conn).lastStreamID, FRAME_SIZE_ERROR, ""))
 		}
@@ -264,12 +264,12 @@ func NewHeaders(headers []hpack.Header, table *hpack.Table, streamID uint32, fla
 
 func (self *Headers) Pack() {
 	idx := 0
-	if self.Header.Flag&PADDED == PADDED {
+	if self.Header.Flags&PADDED == PADDED {
 		self.Wire = make([]byte, int(self.PadLen+1)+len(self.Block))
 		self.Wire[idx] = self.PadLen
 		idx++
 	}
-	if self.Header.Flag&PRIORITY == PRIORITY {
+	if self.Header.Flags&PRIORITY == PRIORITY {
 		self.Wire = make([]byte, 5+len(self.Block))
 		for i := 0; i < 4; i++ {
 			self.Wire[i] = byte(self.StreamDependency >> byte((3-i)*8))
@@ -280,7 +280,7 @@ func (self *Headers) Pack() {
 		self.Wire[4] = self.Weight
 		idx = 5
 	}
-	if self.Header.Flag&END_HEADERS == END_HEADERS || self.Header.Flag&END_STREAM == END_STREAM {
+	if self.Header.Flags&END_HEADERS == END_HEADERS || self.Header.Flags&END_STREAM == END_STREAM {
 		self.Wire = make([]byte, len(self.Block))
 	}
 	/*else {
@@ -293,13 +293,13 @@ func (self *Headers) Pack() {
 
 func (self *Headers) Parse(data []byte) {
 	idx := 0
-	if self.Header.Flag&PADDED == PADDED {
+	if self.Header.Flags&PADDED == PADDED {
 		self.PadLen = data[idx]
 		idx++
 	} else {
 		self.PadLen = 0
 	}
-	if self.Header.Flag&PRIORITY == PRIORITY {
+	if self.Header.Flags&PRIORITY == PRIORITY {
 		if data[idx]&0x80 > 0 {
 			self.E = true
 		}
@@ -336,13 +336,13 @@ func (self *Headers) Evaluate(stream Stream) {
 		stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 	}
 
-	if self.Header.Flag&END_HEADERS == END_HEADERS {
+	if self.Header.Flags&END_HEADERS == END_HEADERS {
 		self.Headers = hpack.Decode(self.Block, (*stream.Conn).Table)
 		// The stream.ID is suspicious
 		stream.Send(NewData("data:hoge", stream.ID, END_STREAM, 0))
 		//stream.ChangeState(?)
 	}
-	if self.Header.Flag&END_STREAM == END_STREAM {
+	if self.Header.Flags&END_STREAM == END_STREAM {
 		stream.ChangeState(HALF_CLOSED_REMOTE)
 	}
 }
@@ -443,7 +443,7 @@ func (self *Ping) Evaluate(stream Stream) {
 	if self.Header.Length != 8 {
 		stream.Send(NewGoAway((*stream.Conn).lastStreamID, FRAME_SIZE_ERROR, ""))
 	}
-	if self.Header.Flag != ACK {
+	if self.Header.Flags != ACK {
 		stream.Send(NewPing("", ACK))
 	} else {
 		fmt.Printf("%s", self.String())
@@ -641,7 +641,7 @@ func (self *Continuation) Evaluate(stream Stream) {
 	if stream.ID == 0 {
 		stream.Send(NewGoAway((*stream.Conn).lastStreamID, PROTOCOL_ERROR, ""))
 	}
-	if self.Header.Flag == END_HEADERS {
+	if self.Header.Flags == END_HEADERS {
 		// ?
 	}
 }
