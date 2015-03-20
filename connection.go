@@ -56,7 +56,7 @@ func (self *Connection) Parse(buf []byte) {
 	}
 	frame.Parse(buf[9:])
 
-	fmt.Printf("Receive: \n%s\n", frame.String())
+	fmt.Printf("Receive: %s\n%s\n", self.Streams[ID].String(), frame.String())
 	self.Streams[ID].EvaluateFrame(frame)
 }
 

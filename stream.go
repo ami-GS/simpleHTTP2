@@ -38,3 +38,7 @@ func (self *Stream) EvaluateFrame(frame Frame) {
 	frame.Evaluate(*self)
 	// do something to self, also error handling
 }
+
+func (self *Stream) String() string {
+	return fmt.Sprintf("Stream: ID=%d, Status=%s, WindowSize=%d", self.ID, self.State.String(), self.WindowSize)
+}
