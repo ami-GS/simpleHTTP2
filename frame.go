@@ -241,6 +241,7 @@ type Headers struct {
 	PadLen, Weight   byte
 	E                bool
 	StreamDependency uint32
+	Table            *hpack.Table
 	Wire             []byte
 }
 
@@ -256,7 +257,7 @@ func NewHeaders(headers []hpack.Header, table *hpack.Table, streamID uint32, fla
 
 	header := NewHttp2Header(length, HEADERS_FRAME, flag, streamID)
 
-	frame := Headers{header, headers, encHeaders, padLen, weight, e, streamDependency, []byte{}}
+	frame := Headers{header, headers, encHeaders, padLen, weight, e, streamDependency, nil, []byte{}}
 	frame.Pack()
 
 	return &frame
@@ -308,6 +309,9 @@ func (self *Headers) Parse(data []byte) {
 		idx += 5
 	}
 	self.Block = data[idx : self.Header.Length-uint32(self.PadLen)]
+	if self.Header.Flags&END_HEADERS == END_HEADERS {
+		self.Headers = hpack.Decode(self.Block, (*self).Table)
+	}
 	/*else {
 		panic("undefined flag")
 	}*/
@@ -337,7 +341,6 @@ func (self *Headers) Evaluate(stream Stream) {
 	}
 
 	if self.Header.Flags&END_HEADERS == END_HEADERS {
-		self.Headers = hpack.Decode(self.Block, (*stream.Conn).Table)
 		// The stream.ID is suspicious
 		stream.Send(NewData("data:hoge", stream.ID, END_STREAM, 0))
 		//stream.ChangeState(?)

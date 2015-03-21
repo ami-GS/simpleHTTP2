@@ -36,7 +36,7 @@ func (self *Connection) Parse(buf []byte) {
 	case DATA_FRAME:
 		frame = &Data{Header: &info}
 	case HEADERS_FRAME:
-		frame = &Headers{Header: &info}
+		frame = &Headers{Header: &info, Table: self.Table} // not cool using table here
 	case PRIORITY_FRAME:
 		frame = &Priority{Header: &info}
 	case RST_STREAM_FRAME:
