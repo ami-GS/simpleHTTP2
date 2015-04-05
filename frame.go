@@ -151,7 +151,13 @@ type Settings struct {
 }
 
 func NewSettings(settingID SETTING, value uint32, flag FLAG) *Settings {
-	header := NewHttp2Header(uint32(6), SETTINGS_FRAME, flag, 0)
+	var length uint32
+	if flag&ACK == ACK {
+		length = 0
+	} else {
+		length = 6
+	}
+	header := NewHttp2Header(length, SETTINGS_FRAME, flag, 0)
 	frame := Settings{header, settingID, value, []byte{}}
 	frame.Pack()
 
@@ -159,12 +165,14 @@ func NewSettings(settingID SETTING, value uint32, flag FLAG) *Settings {
 }
 
 func (self *Settings) Pack() {
-	self.Wire = make([]byte, 6)
-	for i := 0; i < 2; i++ {
-		self.Wire[i] = byte(self.SettingID >> byte((1-i)*8))
-	}
-	for i := 0; i < 4; i++ {
-		self.Wire[2+i] = byte(self.Value >> byte((3-i)*8))
+	if self.Header.Flags&ACK != ACK {
+		self.Wire = make([]byte, 6)
+		for i := 0; i < 2; i++ {
+			self.Wire[i] = byte(self.SettingID >> byte((1-i)*8))
+		}
+		for i := 0; i < 4; i++ {
+			self.Wire[2+i] = byte(self.Value >> byte((3-i)*8))
+		}
 	}
 }
 
@@ -194,7 +202,7 @@ func (self *Settings) Evaluate(stream Stream) {
 	if self.Header.Length%6 != 0 {
 		stream.Send(NewGoAway((*stream.Conn).lastStreamID, FRAME_SIZE_ERROR, ""))
 	}
-	if self.Header.Flags == ACK {
+	if self.Header.Flags&ACK == ACK {
 		if self.Header.Length != 0 {
 			stream.Send(NewGoAway((*stream.Conn).lastStreamID, FRAME_SIZE_ERROR, ""))
 		}
