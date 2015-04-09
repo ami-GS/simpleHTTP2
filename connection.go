@@ -22,7 +22,7 @@ type Connection struct {
 	buf                  []byte
 }
 
-func (self *Connection) Parse(info *Http2Header) (frame Frame) {
+func (self *Connection) GetFrame(info *Http2Header) (frame Frame) {
 
 	switch info.Type {
 	case DATA_FRAME:
@@ -78,7 +78,7 @@ func (self *Connection) RunReceiver() {
 				// not cool
 				self.AddStream(ID)
 			}
-			frame := self.Parse(&info)
+			frame := self.GetFrame(&info)
 			buffer, err = self.Recv(info.Length)
 			frame.Parse(buffer)
 			fmt.Printf("Receive: %s\n%s\n", self.Streams[ID].String(), frame.String())
