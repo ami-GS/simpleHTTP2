@@ -46,9 +46,6 @@ func (self *Connection) Parse(info *Http2Header) (frame Frame) {
 	default:
 		panic("undefined frame type")
 	}
-	self.buf = make([]byte, info.Length)
-	self.Conn.Read(self.buf)
-	frame.Parse(self.buf)
 
 	return frame
 }
@@ -57,17 +54,24 @@ func (self *Connection) Send(frame Frame) {
 	self.Streams[frame.GetStreamID()].Send(frame)
 }
 
+func (self *Connection) Recv(length uint32) (buffer []byte, err error) {
+	buffer = make([]byte, length)
+	_, err = self.Conn.Read(buffer)
+	return
+}
+
 func (self *Connection) RunReceiver() {
+	var buffer []byte
+	var err error // not cool
 	for {
 		if self.Preface {
-			self.buf = make([]byte, 9)
-			self.Conn.Read(self.buf)
-			if reflect.DeepEqual(self.buf, []byte{0, 0, 0, 0, 0, 0, 0, 0, 0}) {
+			buffer, err = self.Recv(9)
+			if err != nil {
 				self.Preface = false
-				return // connection closed from client
+				return
 			}
 			info := Http2Header{}
-			info.Parse(self.buf)
+			info.Parse(buffer)
 			ID := info.GetStreamID()
 			_, ok := self.Streams[ID]
 			if !ok {
@@ -75,18 +79,15 @@ func (self *Connection) RunReceiver() {
 				self.AddStream(ID)
 			}
 			frame := self.Parse(&info)
+			buffer, err = self.Recv(info.Length)
+			frame.Parse(buffer)
 			fmt.Printf("Receive: %s\n%s\n", self.Streams[ID].String(), frame.String())
 			self.Streams[ID].EvaluateFrame(frame)
 		} else {
-			self.buf = make([]byte, 24)
-			_, err := self.Conn.Read(self.buf)
-			if err != nil {
-				return
-			} else {
-				if reflect.DeepEqual(self.buf, CONNECTION_PREFACE) {
-					self.Preface = true
-					fmt.Printf("New connection from %v\n", self.Conn.RemoteAddr())
-				}
+			buffer, err = self.Recv(24)
+			if reflect.DeepEqual(buffer, CONNECTION_PREFACE) {
+				self.Preface = true
+				fmt.Printf("New connection from %v\n", self.Conn.RemoteAddr())
 			}
 		}
 	}
