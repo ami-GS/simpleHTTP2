@@ -30,7 +30,7 @@ func (self *Stream) DecreaseWindow(size uint16) {
 
 func (self *Stream) Send(frame Frame) {
 	// do something to self
-	fmt.Printf("Send: \t%s\n\t%s\n", self.String(), frame.String())
+	fmt.Printf("%s: \t%s\n\t%s\n", SendC.Apply("Send"), self.String(), frame.String())
 	(*self.Conn).Conn.Write(frame.GetWire())
 }
 

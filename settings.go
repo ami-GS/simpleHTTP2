@@ -1,5 +1,9 @@
 package http2
 
+import (
+	"github.com/ami-GS/soac"
+)
+
 // PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n
 var CONNECTION_PREFACE = []byte{0x50, 0x52, 0x49, 0x20, 0x2a, 0x20, 0x48, 0x54, 0x54, 0x50, 0x2f, 0x32, 0x2e, 0x30, 0x0d, 0x0a, 0x0d, 0x0a, 0x53, 0x4d, 0x0d, 0x0a, 0x0d, 0x0a}
 
@@ -151,4 +155,15 @@ var errorNames []string = []string{
 
 func (err ERROR) String() string {
 	return errorNames[int(err)]
+}
+
+var FrameC, SendC, RecvC *soac.Changer
+
+func init() {
+	FrameC = soac.NewChanger()
+	SendC = soac.NewChanger()
+	RecvC = soac.NewChanger()
+	FrameC.Green()
+	SendC.Yellow().Underline()
+	RecvC.Magenda().Underline()
 }
