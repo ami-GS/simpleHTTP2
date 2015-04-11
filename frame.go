@@ -47,7 +47,7 @@ func (self *Http2Header) Parse(data []byte) {
 }
 
 func (self *Http2Header) String() string {
-	str := fmt.Sprintf("%s frame: Length=%d, Flags=%s, StreamID=%d",
+	str := fmt.Sprintf("%s: Length=%d, Flags=%s, StreamID=%d",
 		self.Type.String(), self.Length, self.Flags.String(), self.StreamID)
 	return str
 }

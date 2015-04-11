@@ -81,7 +81,7 @@ func (self *Connection) RunReceiver() {
 			frame := self.GetFrame(&info)
 			buffer, err = self.Recv(info.Length)
 			frame.Parse(buffer)
-			fmt.Printf("Receive: %s\n%s\n", self.Streams[ID].String(), frame.String())
+			fmt.Printf("Receive: \t%s\n\t%s\n", self.Streams[ID].String(), frame.String())
 			self.Streams[ID].EvaluateFrame(frame)
 		} else {
 			buffer, err = self.Recv(24)
